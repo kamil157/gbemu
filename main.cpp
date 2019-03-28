@@ -3,9 +3,9 @@
 #include <vector>
 
 // Disassemble 8080 opcodes into assembly language
-ulong disassemble(std::vector<uint8_t> code, ulong pc)
+ulong disassemble(const std::vector<uint8_t>& code, ulong pc)
 {
-    ulong opbytes = 1;
+    auto opbytes = 1u;
     printf("%04x ", static_cast<uint>(pc));
     switch (code[pc]) {
     case 0x00:
@@ -55,31 +55,32 @@ ulong disassemble(std::vector<uint8_t> code, ulong pc)
     return opbytes;
 }
 
+std::vector<uint8_t> readFile(const std::string& path)
+{
+    std::ifstream input(path, std::ios::binary);
+    if (input.fail()) {
+        throw std::runtime_error("Couldn't open file: " + path);
+    }
+
+    // copies all data into buffer
+    std::vector<uint8_t> buffer(std::istreambuf_iterator<char>(input), {});
+    return buffer;
+}
+
 int main(int argc, char** argv)
 {
-    if (argc < 2) {
-        std::cerr << "Please provide rom name." << std::endl;
+    try {
+        if (argc < 2) {
+            throw std::runtime_error("Please provide rom name.");
+        }
+        auto rom = readFile(argv[1]);
+        auto pc = 0u;
+        while (pc < rom.size()) {
+            pc += disassemble(rom, pc);
+        }
+        return 0;
+    } catch (const std::exception& e) {
+        std::cerr << e.what() << std::endl;
         return 1;
     }
-    std::ifstream file(argv[1], std::ios::binary | std::ios::ate);
-    if (!file) {
-        std::cerr << "Couldn't open file: " << argv[1] << std::endl;
-        return 1;
-    }
-
-    // Get the file size and read it into a memory buffer
-    std::streamsize size = file.tellg();
-    file.seekg(0, std::ios::beg);
-
-    std::vector<uint8_t> buffer(static_cast<ulong>(size));
-    if (!file.read(reinterpret_cast<char*>(buffer.data()), size)) {
-        std::cerr << "Couldn't read file: " << argv[1] << std::endl;
-        return 1;
-    }
-
-    ulong pc = 0;
-    while (static_cast<long>(pc) < size) {
-        pc += disassemble(buffer, pc);
-    }
-    return 0;
 }
