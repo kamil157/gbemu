@@ -15,24 +15,39 @@ std::string disassemble(const std::vector<uint8_t>& code, uint& pc)
     auto opbytes = 1u;
     std::stringstream ss;
     ss << fmt::format("{:04x} ", pc);
-    switch (code[pc]) {
+    switch (code.at(pc)) {
     case 0x00:
         // No operation.
         ss << "NOP";
         break;
     case 0x01:
         // Put value nn into BC.
-        ss << fmt::format("LD     BC,{:02x}{:02x}", code[pc + 2], code[pc + 1]);
+        ss << fmt::format("LD     BC,{:02x}{:02x}", code.at(pc + 2), code.at(pc + 1));
         break;
     case 0x06:
         // Put value B into memory at n.
-        ss << fmt::format("LD     B,{:02x}", code[pc + 1]);
+        ss << fmt::format("LD     B,{:02x}", code.at(pc + 1));
         opbytes = 2;
+        break;
+    case 0x21:
+        // Put value nn into HL.
+        ss << fmt::format("LD     HL,${:02x}{:02x}", code.at(pc + 2), code.at(pc + 1));
+        opbytes = 3;
         break;
     case 0x2A:
         // Put value at address HL into A. Increment HL.
         // Same as: LD A,(HL) - INC HL
         ss << "LDI    A,(HL)";
+        break;
+    case 0x31:
+        // LD SP,nn
+        ss << fmt::format("LD     SP,${:02x}{:02x}", code.at(pc + 2), code.at(pc + 1));
+        opbytes = 3;
+        break;
+    case 0x32:
+        // Put A into memory address HL. Decrement HL.
+        // Same as: LD (HL),A - DEC HL
+        ss << "LDD    (HL),A";
         break;
     case 0x3A:
         // Put value at address HL into A. Decrement HL.
@@ -47,9 +62,13 @@ std::string disassemble(const std::vector<uint8_t>& code, uint& pc)
         // Put value B into A.
         ss << "LD     A,B";
         break;
+    case 0xAF:
+        // Logical exclusive OR n with register A, result in A.
+        ss << "XOR    A";
+        break;
     case 0xE0:
         // Put A into memory address $FF00+n.
-        ss << fmt::format("LD     ($FF00+{:02x}),A", code[pc + 1]);
+        ss << fmt::format("LD     ($FF00+{:02x}),A", code.at(pc + 1));
         break;
     case 0xF2:
         // Put value at address $FF00 + register C into A.

@@ -6,22 +6,71 @@
 #include <iostream>
 #include <stdexcept>
 
-Cpu::Cpu(const std::vector<uint8_t>& code)
+#include "fmt/format.h"
+
+Cpu::Cpu(const std::vector<uint8_t>& code, std::unique_ptr<Mmu> mmu)
     : code(code)
+    , mmu(std::move(mmu))
 {
+}
+
+uint16_t Cpu::getHL() // reverse h/l ?
+{
+    return static_cast<uint16_t>(h << 8 | l);
+}
+
+void Cpu::setHL(uint8_t hi, uint8_t lo) // reverse h/l ?
+{
+    h = hi;
+    l = lo;
+}
+
+void Cpu::decrementHL() // reverse h/l ?
+{
+    if (l == 0) {
+        --h;
+    }
+    --l;
+}
+
+void Cpu::setSP(uint8_t hi, uint8_t lo)
+{
+    sp = static_cast<uint16_t>(hi << 8) | lo;
+}
+
+std::ostream& operator<<(std::ostream& os, Cpu const& cpu)
+{
+    return os << fmt::format("a={:02x} hl={:02x}{:02x} sp={:04x}", cpu.a, cpu.h, cpu.l, cpu.sp);
 }
 
 void Cpu::runCommand()
 {
     uint8_t bytes = 1;
-    switch (code[pc]) {
-    case 0x31:
-        // LD SP,nn
-        uint8_t lo = code[pc + 1];
-        uint8_t hi = code[pc + 2];
-        sp = static_cast<uint16_t>(hi << 8u) | lo;
+    switch (code.at(pc)) {
+    case 0x21:
+        // LD HL,nn
+        setHL(code.at(pc + 2), code.at(pc + 1));
         cycles += 12;
         bytes = 3;
+        break;
+    case 0x31: {
+        // LD SP,nn
+        setSP(code.at(pc + 2), code.at(pc + 1));
+        cycles += 12;
+        bytes = 3;
+        break;
+    }
+    case 0x32: {
+        // LDD (HL),A
+        mmu->set(getHL(), a);
+        decrementHL();
+        cycles += 8;
+        break;
+    }
+    case 0xAF:
+        // XOR A
+        a = a ^ a;
+        cycles += 4;
         break;
     }
     pc += bytes;
@@ -29,8 +78,12 @@ void Cpu::runCommand()
 
 void run(const std::vector<uint8_t>& code)
 {
-    Cpu cpu{ code };
-    cpu.runCommand();
+    auto mmu = std::make_unique<Mmu>();
+    Cpu cpu{ code, std::move(mmu) };
+    for (int i = 0; i < 4; ++i) {
+        cpu.runCommand();
+        std::cout << cpu << std::endl;
+    }
 }
 
 int main(int argc, char** argv)
