@@ -1,6 +1,10 @@
+#include "utils.h"
+
+#include <exception>
 #include <fstream>
 #include <iostream>
 #include <sstream>
+#include <stdexcept>
 #include <vector>
 
 #include "fmt/format.h"
@@ -56,18 +60,6 @@ std::string disassemble(const std::vector<uint8_t>& code, uint& pc)
 
     pc += opbytes;
     return ss.str();
-}
-
-std::vector<uint8_t> readFile(const std::string& path)
-{
-    std::ifstream input(path, std::ios::binary);
-    if (input.fail()) {
-        throw std::runtime_error("Couldn't open file: " + path);
-    }
-
-    // copies all data into buffer
-    std::vector<uint8_t> buffer(std::istreambuf_iterator<char>(input), {});
-    return buffer;
 }
 
 int main(int argc, char** argv)
