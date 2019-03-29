@@ -50,6 +50,3 @@ _deps
 *.files
 *.includes
 
-# Other
-build/
-
