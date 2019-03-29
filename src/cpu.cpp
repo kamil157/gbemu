@@ -18,8 +18,8 @@ void Cpu::runCommand()
     case 0x31:
         // LD SP,nn
         uint8_t lo = code[pc + 1];
-        int hi = code[pc + 2];
-        sp = (hi << 8u) | lo;
+        uint8_t hi = code[pc + 2];
+        sp = static_cast<uint16_t>(hi << 8u) | lo;
         cycles += 12;
         bytes = 3;
         break;
