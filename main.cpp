@@ -1,58 +1,61 @@
 #include <fstream>
 #include <iostream>
+#include <sstream>
 #include <vector>
 
+#include "fmt/format.h"
+
 // Disassemble 8080 opcodes into assembly language
-ulong disassemble(const std::vector<uint8_t>& code, ulong pc)
+std::string disassemble(const std::vector<uint8_t>& code, uint& pc)
 {
     auto opbytes = 1u;
-    printf("%04x ", static_cast<uint>(pc));
+    std::stringstream ss;
+    ss << fmt::format("{:04x} ", pc);
     switch (code[pc]) {
     case 0x00:
-        printf("NOP");
+        ss << "NOP";
         break;
     case 0x01:
-        printf("LXI    B,#$%02x%02x", code[pc + 2], code[pc + 1]);
+        ss << fmt::format("LXI    B,#${:02x}{:02x}", code[pc + 2], code[pc + 1]);
         opbytes = 3;
         break;
     case 0x02:
-        printf("STAX   B");
+        ss << "STAX   B";
         break;
     case 0x03:
-        printf("INX    B");
+        ss << "INX    B";
         break;
     case 0x04:
-        printf("INR    B");
+        ss << "INR    B";
         break;
     case 0x05:
-        printf("DCR    B");
+        ss << "DCR    B";
         break;
     case 0x06:
-        printf("MVI    B,#$%02x", code[pc + 1]);
+        ss << fmt::format("MVI    B,#${:02x}", code[pc + 1]);
         opbytes = 2;
         break;
     case 0x07:
-        printf("RLC");
+        ss << "RLC";
         break;
     case 0x08:
-        printf("NOP");
+        ss << "NOP";
         break;
     /* ........ */
     case 0x3e:
-        printf("MVI    A,#0x%02x", code[pc + 1]);
+        ss << fmt::format("MVI    A,#${:02x}", code[pc + 1]);
         opbytes = 2;
         break;
     /* ........ */
     case 0xc3:
-        printf("JMP    $%02x%02x", code[pc + 2], code[pc + 1]);
+        ss << fmt::format("JMP    ${:02x}{:02x}", code[pc + 2], code[pc + 1]);
         opbytes = 3;
         break;
         /* ........ */
     }
 
-    printf("\n");
-
-    return opbytes;
+    pc += opbytes;
+    return ss.str();
 }
 
 std::vector<uint8_t> readFile(const std::string& path)
@@ -76,7 +79,7 @@ int main(int argc, char** argv)
         auto rom = readFile(argv[1]);
         auto pc = 0u;
         while (pc < rom.size()) {
-            pc += disassemble(rom, pc);
+            std::cout << disassemble(rom, pc) << std::endl;
         }
         return 0;
     } catch (const std::exception& e) {
