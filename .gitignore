@@ -43,3 +43,13 @@ install_manifest.txt
 compile_commands.json
 CTestTestfile.cmake
 _deps
+
+# Qtcreator
+*.config
+*.creator*
+*.files
+*.includes
+
+# Other
+build/
+
