@@ -21,105 +21,124 @@ bool isBitSet(uint8_t byte, uint8_t n)
     return (byte >> n) & 1;
 }
 
-std::string disassembleExtendedCommand(const byteCodePtr& code, uint16_t& pc)
+Instruction disassembleExtendedCommand(const byteCodePtr& code, uint16_t& pc)
 {
+    Instruction instr;
+    instr.pc = pc;
     switch (code->at(pc + 1)) {
     case 0x7C:
         // Test bit 7 in register H.
-        return "BIT    7,H";
+        instr.mnemonic = "BIT";
+        instr.operands = "7,H";
+        break;
     }
 
-    return "";
+    return instr;
 }
 
 // Disassemble 8080 opcodes into assembly language
-std::string disassemble(const byteCodePtr& code, uint16_t& pc)
+Instruction disassemble(const byteCodePtr& code, uint16_t& pc)
 {
+    Instruction instr;
     auto opbytes = 1u;
-    std::stringstream ss;
-    ss << fmt::format("{:04x} ", pc);
+    instr.pc = pc;
     switch (code->at(pc)) {
     case 0x00:
         // No operation.
-        ss << "NOP";
+        instr.mnemonic = "NOP";
         break;
     case 0x01:
         // Put value nn into BC.
-        ss << fmt::format("LD     BC,{:02x}{:02x}", code->at(pc + 2), code->at(pc + 1));
+        instr.mnemonic = "LD";
+        instr.operands = fmt::format("BC,{:02x}{:02x}", code->at(pc + 2), code->at(pc + 1));
         break;
     case 0x06:
         // Put value n into B.
-        ss << fmt::format("LD     B,{:02x}", code->at(pc + 1));
+        instr.mnemonic = "LD";
+        instr.operands = fmt::format("B,{:02x}", code->at(pc + 1));
         opbytes = 2;
         break;
     case 0x0E:
         // Put value n into C.
-        ss << fmt::format("LD     C,{:02x}", code->at(pc + 1));
+        instr.mnemonic = "LD";
+        instr.operands = fmt::format("C,{:02x}", code->at(pc + 1));
         opbytes = 2;
         break;
     case 0x20:
         // JR NZ,n
-        ss << fmt::format("JR     NZ,${:02x}", code->at(pc + 1));
+        instr.mnemonic = "JR";
+        instr.operands = fmt::format("NZ,${:02x}", code->at(pc + 1));
         opbytes = 2;
         break;
     case 0x21:
         // Put value nn into HL.
-        ss << fmt::format("LD     HL,${:02x}{:02x}", code->at(pc + 2), code->at(pc + 1));
+        instr.mnemonic = "LD";
+        instr.operands = fmt::format("HL,${:02x}{:02x}", code->at(pc + 2), code->at(pc + 1));
         opbytes = 3;
         break;
     case 0x2A:
         // Put value at address HL into A. Increment HL.
         // Same as: LD A,(HL) - INC HL
-        ss << "LDI    A,(HL)";
+        instr.mnemonic = "LDI";
+        instr.operands = "A,(HL)";
         break;
     case 0x31:
         // LD SP,nn
-        ss << fmt::format("LD     SP,${:02x}{:02x}", code->at(pc + 2), code->at(pc + 1));
+        instr.mnemonic = "LD";
+        instr.operands = fmt::format("SP,${:02x}{:02x}", code->at(pc + 2), code->at(pc + 1));
         opbytes = 3;
         break;
     case 0x32:
         // Put A into memory address HL. Decrement HL.
         // Same as: LD (HL),A - DEC HL
-        ss << "LDD    (HL),A";
+        instr.mnemonic = "LDD";
+        instr.operands = "(HL),A";
         break;
     case 0x3A:
         // Put value at address HL into A. Decrement HL.
         // Same as: LD A,(HL) - DEC HL
-        ss << "LDD    A,(HL)";
+        instr.mnemonic = "LDD";
+        instr.operands = "A,(HL)";
         break;
     case 0x3E:
         // Put value n into A.
-        ss << fmt::format("LD     A,{:02x}", code->at(pc + 1));
+        instr.mnemonic = "LD";
+        instr.operands = fmt::format("A,{:02x}", code->at(pc + 1));
         opbytes = 2;
         break;
     case 0x47:
         // Put value A into B.
-        ss << "LD     B,A";
+        instr.mnemonic = "LD";
+        instr.operands = "B,A";
         break;
     case 0x78:
         // Put value B into A.
-        ss << "LD     A,B";
+        instr.mnemonic = "LD";
+        instr.operands = "A,B";
         break;
     case 0xAF:
         // Logical exclusive OR n with register A, result in A.
-        ss << "XOR    A";
+        instr.mnemonic = "XOR";
+        instr.operands = "A";
         break;
     case 0xCB:
-        ss << disassembleExtendedCommand(code, pc);
+        instr = disassembleExtendedCommand(code, pc);
         opbytes = 2;
         break;
     case 0xE0:
         // Put A into memory address $FF00+n.
-        ss << fmt::format("LD     ($FF00+{:02x}),A", code->at(pc + 1));
+        instr.mnemonic = "LD";
+        instr.operands = fmt::format("($FF00+{:02x}),A", code->at(pc + 1));
         opbytes = 2;
         break;
     case 0xF2:
         // Put value at address $FF00 + register C into A.
         // Same as: LD A,($FF00+C)
-        ss << "LD     A,(C)";
+        instr.mnemonic = "LD";
+        instr.operands = "A,(C)";
         break;
     }
 
     pc += opbytes;
-    return ss.str();
+    return instr;
 }

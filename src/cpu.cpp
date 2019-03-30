@@ -157,7 +157,8 @@ void run(const byteCodePtr& code)
     Cpu cpu{ code, std::move(mmu) };
     uint16_t pc = 0u;
     while (cpu.runCommand()) {
-        std::cout << fmt::format("{:<25}", disassemble(code, pc)) << cpu << std::endl;
+        Instruction instr = disassemble(code, pc);
+        std::cout << fmt::format("{:04x} {:<6} {:<13}", instr.pc, instr.mnemonic, instr.operands) << cpu << std::endl;
         pc = cpu.getPc();
     }
 }
