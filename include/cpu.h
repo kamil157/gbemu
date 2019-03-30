@@ -3,21 +3,22 @@
 
 #include "mmu.h"
 
+#include <bitset>
 #include <cstdint>
-#include <vector>
-#include <ostream>
 #include <memory>
+#include <ostream>
+#include <vector>
 
 class Cpu {
 public:
     Cpu(const std::vector<uint8_t>& code, std::unique_ptr<Mmu> mmu);
-    void runCommand();
+    bool runCommand();
 
 private:
     std::vector<uint8_t> code;
 
     uint8_t a = 0; // Accumulator
-    uint8_t f = 0; // Status flags
+    std::bitset<8> f; // Status flags
 
     // General purpose registers
     uint8_t b = 0;
@@ -33,10 +34,13 @@ private:
     int cycles = 0;
     std::unique_ptr<Mmu> mmu;
 
+    void setFlag(uint8_t flag, bool b);
     void setHL(uint8_t hi, uint8_t lo);
+    void setHL(uint16_t nn);
     uint16_t getHL();
     void decrementHL();
     void setSP(uint8_t hi, uint8_t lo);
+    bool runExtendedCommand();
     friend std::ostream& operator<<(std::ostream& os, Cpu const& cpu);
 };
 

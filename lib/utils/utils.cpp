@@ -13,3 +13,8 @@ std::vector<uint8_t> readFile(const std::string& path)
     std::vector<uint8_t> buffer(std::istreambuf_iterator<char>(input), {});
     return buffer;
 }
+
+bool isBitSet(uint8_t byte, uint8_t n)
+{
+    return (byte >> n) & 1;
+}

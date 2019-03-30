@@ -8,6 +8,10 @@
 
 #include "fmt/format.h"
 
+const uint8_t flagZ = 7;
+const uint8_t flagN = 6;
+const uint8_t flagH = 5;
+
 Cpu::Cpu(const std::vector<uint8_t>& code, std::unique_ptr<Mmu> mmu)
     : code(code)
     , mmu(std::move(mmu))
@@ -25,12 +29,15 @@ void Cpu::setHL(uint8_t hi, uint8_t lo)
     l = lo;
 }
 
+void Cpu::setHL(uint16_t nn)
+{
+    h = nn >> 8;
+    l = nn & 0xff;
+}
+
 void Cpu::decrementHL()
 {
-    if (l == 0) {
-        --h;
-    }
-    --l;
+    setHL(getHL() - 1);
 }
 
 void Cpu::setSP(uint8_t hi, uint8_t lo)
@@ -40,11 +47,42 @@ void Cpu::setSP(uint8_t hi, uint8_t lo)
 
 std::ostream& operator<<(std::ostream& os, Cpu const& cpu)
 {
-    return os << fmt::format("pc={:04x} a={:02x} hl={:02x}{:02x} sp={:04x}", cpu.pc, cpu.a, cpu.h, cpu.l, cpu.sp);
+    std::string flags = cpu.f.to_string().substr(0, 4);
+    return os << fmt::format("pc={:04x} a={:02x} f={} hl={:02x}{:02x} sp={:04x}", cpu.pc, cpu.a, flags, cpu.h, cpu.l, cpu.sp);
 }
 
-void Cpu::runCommand()
+void Cpu::setFlag(uint8_t flag, bool b)
 {
+    b ? f.set(flag) : f.reset(flag);
+}
+
+bool Cpu::runExtendedCommand()
+{
+    bool success = true;
+    uint8_t bytes = 1;
+    switch (code.at(pc + 1)) {
+    case 0x7C:
+        // BIT 7,H
+        setFlag(flagZ, !isBitSet(7, h));
+        setFlag(flagN, 0);
+        setFlag(flagH, 1);
+        cycles += 8;
+        bytes = 2;
+        break;
+    default:
+        std::cerr << fmt::format("Unimplemented opcode: {:02X} {:02X}\n", code.at(pc), code.at(pc + 1));
+        success = false;
+        bytes = 0;
+        break;
+    }
+
+    pc += bytes;
+    return success;
+}
+
+bool Cpu::runCommand()
+{
+    bool success = true;
     uint8_t bytes = 1;
     switch (code.at(pc)) {
     case 0x21:
@@ -72,16 +110,25 @@ void Cpu::runCommand()
         a = a ^ a;
         cycles += 4;
         break;
+    case 0xCB:
+        success = runExtendedCommand();
+        break;
+    default:
+        std::cerr << fmt::format("Unimplemented opcode: {:02X}\n", code.at(pc));
+        success = false;
+        bytes = 0;
+        break;
     }
+
     pc += bytes;
+    return success;
 }
 
 void run(const std::vector<uint8_t>& code)
 {
     auto mmu = std::make_unique<Mmu>();
     Cpu cpu{ code, std::move(mmu) };
-    for (int i = 0; i < 4; ++i) {
-        cpu.runCommand();
+    while (cpu.runCommand()) {
         std::cout << cpu << std::endl;
     }
 }
