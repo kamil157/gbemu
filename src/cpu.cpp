@@ -12,7 +12,7 @@ const uint8_t flagZ = 7;
 const uint8_t flagN = 6;
 const uint8_t flagH = 5;
 
-Cpu::Cpu(const std::vector<uint8_t>& code, std::unique_ptr<Mmu> mmu)
+Cpu::Cpu(const byteCodePtr& code, std::unique_ptr<Mmu> mmu)
     : code(code)
     , mmu(std::move(mmu))
 {
@@ -59,24 +59,20 @@ void Cpu::setFlag(uint8_t flag, bool b)
 bool Cpu::runExtendedCommand()
 {
     bool success = true;
-    uint8_t bytes = 1;
-    switch (code.at(pc + 1)) {
+    switch (code->at(pc + 1)) {
     case 0x7C:
         // BIT 7,H
         setFlag(flagZ, !isBitSet(7, h));
         setFlag(flagN, 0);
         setFlag(flagH, 1);
         cycles += 8;
-        bytes = 2;
         break;
     default:
-        std::cerr << fmt::format("Unimplemented opcode: {:02X} {:02X}\n", code.at(pc), code.at(pc + 1));
+        std::cerr << fmt::format("Unimplemented opcode: {:02X} {:02X}\n", code->at(pc), code->at(pc + 1));
         success = false;
-        bytes = 0;
         break;
     }
 
-    pc += bytes;
     return success;
 }
 
@@ -84,16 +80,16 @@ bool Cpu::runCommand()
 {
     bool success = true;
     uint8_t bytes = 1;
-    switch (code.at(pc)) {
+    switch (code->at(pc)) {
     case 0x21:
         // LD HL,nn
-        setHL(code.at(pc + 2), code.at(pc + 1));
+        setHL(code->at(pc + 2), code->at(pc + 1));
         cycles += 12;
         bytes = 3;
         break;
     case 0x31: {
         // LD SP,nn
-        setSP(code.at(pc + 2), code.at(pc + 1));
+        setSP(code->at(pc + 2), code->at(pc + 1));
         cycles += 12;
         bytes = 3;
         break;
@@ -111,10 +107,11 @@ bool Cpu::runCommand()
         cycles += 4;
         break;
     case 0xCB:
+        bytes = 2;
         success = runExtendedCommand();
         break;
     default:
-        std::cerr << fmt::format("Unimplemented opcode: {:02X}\n", code.at(pc));
+        std::cerr << fmt::format("Unimplemented opcode: {:02X}\n", code->at(pc));
         success = false;
         bytes = 0;
         break;
@@ -124,10 +121,10 @@ bool Cpu::runCommand()
     return success;
 }
 
-void run(const std::vector<uint8_t>& code)
+void run(const byteCodePtr& code)
 {
     auto mmu = std::make_unique<Mmu>();
-    Cpu cpu{ code, std::move(mmu) };
+    Cpu cpu{ std::shared_ptr<std::vector<uint8_t>>(code), std::move(mmu) };
     while (cpu.runCommand()) {
         std::cout << cpu << std::endl;
     }

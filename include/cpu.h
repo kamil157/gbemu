@@ -2,6 +2,7 @@
 #define CPU_H
 
 #include "mmu.h"
+#include "utils.h"
 
 #include <bitset>
 #include <cstdint>
@@ -11,11 +12,11 @@
 
 class Cpu {
 public:
-    Cpu(const std::vector<uint8_t>& code, std::unique_ptr<Mmu> mmu);
+    Cpu(const byteCodePtr& code, std::unique_ptr<Mmu> mmu);
     bool runCommand();
 
 private:
-    std::vector<uint8_t> code;
+    byteCodePtr code;
 
     uint8_t a = 0; // Accumulator
     std::bitset<8> f; // Status flags
