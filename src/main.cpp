@@ -36,8 +36,18 @@ std::string disassemble(const byteCodePtr& code, uint& pc)
         ss << fmt::format("LD     BC,{:02x}{:02x}", code->at(pc + 2), code->at(pc + 1));
         break;
     case 0x06:
-        // Put value B into memory at n.
+        // Put value n into B.
         ss << fmt::format("LD     B,{:02x}", code->at(pc + 1));
+        opbytes = 2;
+        break;
+    case 0x0E:
+        // Put value n into C.
+        ss << fmt::format("LD     C,{:02x}", code->at(pc + 1));
+        opbytes = 2;
+        break;
+    case 0x20:
+        // JR NZ,n
+        ss << fmt::format("JR     NZ,${:02x}", code->at(pc + 1));
         opbytes = 2;
         break;
     case 0x21:
@@ -64,6 +74,11 @@ std::string disassemble(const byteCodePtr& code, uint& pc)
         // Put value at address HL into A. Decrement HL.
         // Same as: LD A,(HL) - DEC HL
         ss << "LDD    A,(HL)";
+        break;
+    case 0x3E:
+        // Put value n into A.
+        ss << fmt::format("LD     A,{:02x}", code->at(pc + 1));
+        opbytes = 2;
         break;
     case 0x47:
         // Put value A into B.

@@ -48,7 +48,7 @@ void Cpu::setSP(uint8_t hi, uint8_t lo)
 std::ostream& operator<<(std::ostream& os, Cpu const& cpu)
 {
     std::string flags = cpu.f.to_string().substr(0, 4);
-    return os << fmt::format("pc={:04x} a={:02x} f={} hl={:02x}{:02x} sp={:04x}", cpu.pc, cpu.a, flags, cpu.h, cpu.l, cpu.sp);
+    return os << fmt::format("pc={:04x} a={:02x} c={:02x} f={} hl={:02x}{:02x} sp={:04x}", cpu.pc, cpu.a, cpu.c, flags, cpu.h, cpu.l, cpu.sp);
 }
 
 void Cpu::setFlag(uint8_t flag, bool b)
@@ -76,11 +76,32 @@ bool Cpu::runExtendedCommand()
     return success;
 }
 
+uint8_t Cpu::ld(uint8_t& reg)
+{
+    // LD reg,n
+    reg = code->at(pc + 1);
+    cycles += 8;
+    return 2;
+}
+
 bool Cpu::runCommand()
 {
     bool success = true;
     uint8_t bytes = 1;
     switch (code->at(pc)) {
+    case 0x0E:
+        // LD C,n
+        bytes = ld(c);
+        break;
+    case 0x20:
+        // JR NZ,n
+        if (f[flagZ]) {
+            pc += 2 + static_cast<int8_t>(code->at(pc + 1));
+            return success;
+        }
+        cycles += 8;
+        bytes = 2;
+        break;
     case 0x21:
         // LD HL,nn
         setHL(code->at(pc + 2), code->at(pc + 1));
@@ -101,6 +122,10 @@ bool Cpu::runCommand()
         cycles += 8;
         break;
     }
+    case 0x3E:
+        // LD A,n
+        bytes = ld(a);
+        break;
     case 0xAF:
         // XOR A
         a = a ^ a;
