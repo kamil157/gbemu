@@ -17,9 +17,10 @@ struct Instruction {
     uint16_t pc;
     std::string mnemonic;
     std::string operands;
+    std::vector<uint8_t> bytes;
 };
 
 // Disassemble 8080 opcodes into assembly language.
-Instruction disassemble(const byteCodePtr& code, uint16_t& pc);
+Instruction disassemble(const byteCodePtr& code, uint16_t pc);
 
 #endif // UTILS_H

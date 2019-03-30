@@ -37,11 +37,11 @@ Instruction disassembleExtendedCommand(const byteCodePtr& code, uint16_t& pc)
 }
 
 // Disassemble 8080 opcodes into assembly language
-Instruction disassemble(const byteCodePtr& code, uint16_t& pc)
+Instruction disassemble(const byteCodePtr& code, uint16_t pc)
 {
     Instruction instr;
-    auto opbytes = 1u;
     instr.pc = pc;
+    auto opbytes = 1u;
     switch (code->at(pc)) {
     case 0x00:
         // No operation.
@@ -139,6 +139,9 @@ Instruction disassemble(const byteCodePtr& code, uint16_t& pc)
         break;
     }
 
-    pc += opbytes;
+    for (uint8_t i = 0; i < opbytes; ++i) {
+        instr.bytes.push_back(code->at(pc + i));
+    }
+
     return instr;
 }

@@ -4,6 +4,7 @@
 
 #include <exception>
 #include <iostream>
+#include <sstream>
 #include <stdexcept>
 
 #include "fmt/format.h"
@@ -158,7 +159,11 @@ void run(const byteCodePtr& code)
     uint16_t pc = 0u;
     while (cpu.runCommand()) {
         Instruction instr = disassemble(code, pc);
-        std::cout << fmt::format("{:04x} {:<6} {:<13}", instr.pc, instr.mnemonic, instr.operands) << cpu << std::endl;
+        std::stringstream bytes;
+        for (auto byte : instr.bytes) {
+            bytes << fmt::format("{:02X} ", byte);
+        }
+        std::cout << fmt::format("{:04x} {:<10} {:<6} {:<13}", instr.pc, bytes.str(), instr.mnemonic, instr.operands) << cpu << std::endl;
         pc = cpu.getPc();
     }
 }
