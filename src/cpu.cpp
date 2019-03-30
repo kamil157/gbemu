@@ -14,18 +14,18 @@ Cpu::Cpu(const std::vector<uint8_t>& code, std::unique_ptr<Mmu> mmu)
 {
 }
 
-uint16_t Cpu::getHL() // reverse h/l ?
+uint16_t Cpu::getHL()
 {
     return static_cast<uint16_t>(h << 8 | l);
 }
 
-void Cpu::setHL(uint8_t hi, uint8_t lo) // reverse h/l ?
+void Cpu::setHL(uint8_t hi, uint8_t lo)
 {
     h = hi;
     l = lo;
 }
 
-void Cpu::decrementHL() // reverse h/l ?
+void Cpu::decrementHL()
 {
     if (l == 0) {
         --h;
@@ -40,7 +40,7 @@ void Cpu::setSP(uint8_t hi, uint8_t lo)
 
 std::ostream& operator<<(std::ostream& os, Cpu const& cpu)
 {
-    return os << fmt::format("a={:02x} hl={:02x}{:02x} sp={:04x}", cpu.a, cpu.h, cpu.l, cpu.sp);
+    return os << fmt::format("pc={:04x} a={:02x} hl={:02x}{:02x} sp={:04x}", cpu.pc, cpu.a, cpu.h, cpu.l, cpu.sp);
 }
 
 void Cpu::runCommand()
