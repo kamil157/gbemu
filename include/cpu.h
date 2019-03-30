@@ -14,6 +14,7 @@ class Cpu {
 public:
     Cpu(const byteCodePtr& code, std::unique_ptr<Mmu> mmu);
     bool runCommand();
+    uint16_t getPc();
 
 private:
     byteCodePtr code;
@@ -35,10 +36,10 @@ private:
     int cycles = 0;
     std::unique_ptr<Mmu> mmu;
 
-    // Load operand into register
+    // Load operand into register.
     uint8_t ld(uint8_t& reg);
 
-    // Set flag in register f to b
+    // Set flag in register f to b.
     void setFlag(uint8_t flag, bool b);
     void setHL(uint8_t hi, uint8_t lo);
     void setHL(uint16_t nn);

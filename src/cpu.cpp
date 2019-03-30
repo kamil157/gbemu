@@ -18,6 +18,11 @@ Cpu::Cpu(const byteCodePtr& code, std::unique_ptr<Mmu> mmu)
 {
 }
 
+uint16_t Cpu::getPc()
+{
+    return pc;
+}
+
 uint16_t Cpu::getHL()
 {
     return static_cast<uint16_t>(h << 8 | l);
@@ -149,9 +154,11 @@ bool Cpu::runCommand()
 void run(const byteCodePtr& code)
 {
     auto mmu = std::make_unique<Mmu>();
-    Cpu cpu{ std::shared_ptr<std::vector<uint8_t>>(code), std::move(mmu) };
+    Cpu cpu{ code, std::move(mmu) };
+    uint16_t pc = 0u;
     while (cpu.runCommand()) {
-        std::cout << cpu << std::endl;
+        std::cout << fmt::format("{:<25}", disassemble(code, pc)) << cpu << std::endl;
+        pc = cpu.getPc();
     }
 }
 
