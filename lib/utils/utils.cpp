@@ -4,6 +4,9 @@
 #include <sstream>
 
 #include "fmt/format.h"
+#include <nlohmann/json.hpp>
+
+using json = nlohmann::json;
 
 byteCodePtr readFile(const std::string& path)
 {

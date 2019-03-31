@@ -2,13 +2,18 @@ cmake_minimum_required(VERSION 2.8)
 
 project(gbemu)
 
+set (CMAKE_CXX_STANDARD 14)
+
 if (DEBUG_BUILD)
     set(CMAKE_BUILD_TYPE Debug)
 endif ()
 
+set(JSON_BuildTests OFF CACHE INTERNAL "")
+
 add_subdirectory(lib/utils)
 add_subdirectory(lib/fmt EXCLUDE_FROM_ALL)
 add_subdirectory(lib/spdlog EXCLUDE_FROM_ALL)
+add_subdirectory(lib/nlohmann_json)
 
 add_executable(disassembler src/disassembler.cpp ${UTILS_HEADER})
 add_dependencies(disassembler utils)
