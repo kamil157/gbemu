@@ -5,6 +5,8 @@
 #include <string>
 #include <vector>
 
+#include <nlohmann/json.hpp>
+
 using byteCodePtr = std::shared_ptr<std::vector<uint8_t>>;
 
 // Read whole file into a buffer and return it.
@@ -19,6 +21,8 @@ struct Instruction {
     std::string operands;
     std::vector<uint8_t> bytes;
 };
+
+nlohmann::json readOpcodes();
 
 // Disassemble 8080 opcodes into assembly language.
 Instruction disassemble(const byteCodePtr& code, uint16_t pc);

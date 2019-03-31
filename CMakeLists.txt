@@ -1,12 +1,10 @@
 cmake_minimum_required(VERSION 2.8)
 
+cmake_policy(SET CMP0048 NEW)
+
 project(gbemu)
 
-set (CMAKE_CXX_STANDARD 14)
-
-if (DEBUG_BUILD)
-    set(CMAKE_BUILD_TYPE Debug)
-endif ()
+set (CMAKE_CXX_STANDARD 17)
 
 set(JSON_BuildTests OFF CACHE INTERNAL "")
 
