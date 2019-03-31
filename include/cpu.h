@@ -14,7 +14,8 @@ class Cpu {
 public:
     Cpu(const byteCodePtr& code, std::unique_ptr<Mmu> mmu);
     bool runCommand();
-    uint16_t getPc();
+    uint16_t getPc() const;
+    std::string toString() const;
 
 private:
     byteCodePtr code;
@@ -43,11 +44,10 @@ private:
     void setFlag(uint8_t flag, bool b);
     void setHL(uint8_t hi, uint8_t lo);
     void setHL(uint16_t nn);
-    uint16_t getHL();
+    uint16_t getHL() const;
     void decrementHL();
     void setSP(uint8_t hi, uint8_t lo);
     bool runExtendedCommand();
-    friend std::ostream& operator<<(std::ostream& os, Cpu const& cpu);
 };
 
 #endif // CPU_H

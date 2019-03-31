@@ -1,15 +1,14 @@
 #ifndef MMU_H
 #define MMU_H
 
-#include <vector>
 #include <cstdint>
+#include <vector>
 
-class Mmu
-{
+class Mmu {
 public:
-Mmu();
-void set(uint16_t address, uint8_t value);
-uint8_t get(uint16_t address);
+    Mmu();
+    void set(uint16_t address, uint8_t value);
+    uint8_t get(uint16_t address) const;
 
 private:
     std::vector<uint8_t> ram;

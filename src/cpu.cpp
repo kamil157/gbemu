@@ -2,10 +2,7 @@
 
 #include "utils.h"
 
-#include <exception>
 #include <iostream>
-#include <sstream>
-#include <stdexcept>
 
 #include "fmt/format.h"
 
@@ -19,12 +16,12 @@ Cpu::Cpu(const byteCodePtr& code, std::unique_ptr<Mmu> mmu)
 {
 }
 
-uint16_t Cpu::getPc()
+uint16_t Cpu::getPc() const
 {
     return pc;
 }
 
-uint16_t Cpu::getHL()
+uint16_t Cpu::getHL() const
 {
     return static_cast<uint16_t>(h << 8 | l);
 }
@@ -51,10 +48,15 @@ void Cpu::setSP(uint8_t hi, uint8_t lo)
     sp = static_cast<uint16_t>(hi << 8) | lo;
 }
 
+std::string Cpu::toString() const
+{
+    std::string flags = f.to_string().substr(0, 4);
+    return fmt::format("pc={:04x} a={:02x} c={:02x} f={} hl={:02x}{:02x} sp={:04x}", pc, a, c, flags, h, l, sp);
+}
+
 std::ostream& operator<<(std::ostream& os, Cpu const& cpu)
 {
-    std::string flags = cpu.f.to_string().substr(0, 4);
-    return os << fmt::format("pc={:04x} a={:02x} c={:02x} f={} hl={:02x}{:02x} sp={:04x}", cpu.pc, cpu.a, cpu.c, flags, cpu.h, cpu.l, cpu.sp);
+    return os << cpu.toString();
 }
 
 void Cpu::setFlag(uint8_t flag, bool b)
@@ -141,6 +143,11 @@ bool Cpu::runCommand()
         bytes = 2;
         success = runExtendedCommand();
         break;
+    case 0xE2:
+        // LD ($FF00+C),A
+        mmu->set(0xFF00 + c, a);
+        cycles += 8;
+        break;
     default:
         std::cerr << fmt::format("Unimplemented opcode: {:02X}\n", code->at(pc));
         success = false;
@@ -150,35 +157,4 @@ bool Cpu::runCommand()
 
     pc += bytes;
     return success;
-}
-
-void run(const byteCodePtr& code)
-{
-    auto mmu = std::make_unique<Mmu>();
-    Cpu cpu{ code, std::move(mmu) };
-    uint16_t pc = 0u;
-    while (cpu.runCommand()) {
-        Instruction instr = disassemble(code, pc);
-        std::stringstream bytes;
-        for (auto byte : instr.bytes) {
-            bytes << fmt::format("{:02X} ", byte);
-        }
-        std::cout << fmt::format("{:04x} {:<10} {:<6} {:<13}", instr.pc, bytes.str(), instr.mnemonic, instr.operands) << cpu << std::endl;
-        pc = cpu.getPc();
-    }
-}
-
-int main(int argc, char** argv)
-{
-    try {
-        if (argc < 2) {
-            throw std::runtime_error("Please provide rom name.");
-        }
-        auto rom = readFile(argv[1]);
-        run(rom);
-        return 0;
-    } catch (const std::exception& e) {
-        std::cerr << e.what() << std::endl;
-        return 1;
-    }
 }

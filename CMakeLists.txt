@@ -8,13 +8,14 @@ endif ()
 
 add_subdirectory(lib/utils)
 add_subdirectory(lib/fmt EXCLUDE_FROM_ALL)
+add_subdirectory(lib/spdlog EXCLUDE_FROM_ALL)
 
-add_executable(disassembler src/main.cpp ${UTILS_HEADER})
+add_executable(disassembler src/disassembler.cpp ${UTILS_HEADER})
 add_dependencies(disassembler utils)
 target_include_directories(disassembler PRIVATE ${UTILS_DIR})
 target_link_libraries(disassembler utils)
 
-add_executable(emulator src/cpu.cpp src/mmu.cpp ${UTILS_HEADER} include/cpu.h include/mmu.h)
-add_dependencies(emulator utils)
+add_executable(emulator src/cpu.cpp src/mmu.cpp src/emulator.cpp ${UTILS_HEADER} include/cpu.h include/mmu.h)
+add_dependencies(emulator utils spdlog::spdlog)
 target_include_directories(emulator PRIVATE ${UTILS_DIR} include)
-target_link_libraries(emulator utils)
+target_link_libraries(emulator utils spdlog::spdlog)

@@ -131,6 +131,11 @@ Instruction disassemble(const byteCodePtr& code, uint16_t pc)
         instr.operands = fmt::format("($FF00+{:02x}),A", code->at(pc + 1));
         opbytes = 2;
         break;
+    case 0xE2:
+        // Put A into address $FF00 + register C.
+        instr.mnemonic = "LD";
+        instr.operands = "($FF00+C),A";
+        break;
     case 0xF2:
         // Put value at address $FF00 + register C into A.
         // Same as: LD A,($FF00+C)
