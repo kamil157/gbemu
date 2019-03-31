@@ -7,7 +7,6 @@
 #include <sstream>
 #include <stdexcept>
 
-#include "fmt/format.h"
 #include "spdlog/spdlog.h"
 
 void run(const byteCodePtr& code)
@@ -17,7 +16,7 @@ void run(const byteCodePtr& code)
     uint16_t pc = 0u;
     while (cpu.runCommand()) {
         Instruction instr = disassemble(code, pc);
-        spdlog::debug("{:04x} {:<10} {:<6} {:<13} {}", instr.pc, instr.bytesToString(), instr.mnemonic, instr.operandsToString(), cpu.toString());
+        std::cout << fmt::format("{:04x} {:<10} {:<6} {:<13} {}\n", instr.pc, instr.bytesToString(), instr.mnemonic, instr.operandsToString(), cpu.toString());
         pc = cpu.getPc();
     }
 }

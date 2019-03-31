@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 
 cmake_policy(SET CMP0048 NEW)
+cmake_policy(SET CMP0028 NEW)
 
 project(gbemu)
 
@@ -19,6 +20,6 @@ target_include_directories(disassembler PRIVATE ${UTILS_DIR})
 target_link_libraries(disassembler utils)
 
 add_executable(emulator src/cpu.cpp src/mmu.cpp src/emulator.cpp ${UTILS_HEADER} include/cpu.h include/mmu.h)
-add_dependencies(emulator utils spdlog::spdlog)
+add_dependencies(emulator utils spdlog)
 target_include_directories(emulator PRIVATE ${UTILS_DIR} include)
-target_link_libraries(emulator utils spdlog::spdlog)
+target_link_libraries(emulator utils spdlog)
