@@ -17,11 +17,7 @@ void run(const byteCodePtr& code)
     uint16_t pc = 0u;
     while (cpu.runCommand()) {
         Instruction instr = disassemble(code, pc);
-        std::stringstream bytes;
-        for (auto byte : instr.bytes) {
-            bytes << fmt::format("{:02X} ", byte);
-        }
-        spdlog::debug("{:04x} {:<10} {:<6} {:<13} {}", instr.pc, bytes.str(), instr.mnemonic, instr.operands, cpu.toString());
+        spdlog::debug("{:04x} {:<10} {:<6} {:<13} {}", instr.pc, instr.bytesToString(), instr.mnemonic, instr.operandsToString(), cpu.toString());
         pc = cpu.getPc();
     }
 }

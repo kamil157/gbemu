@@ -2,6 +2,7 @@
 #define UTILS_H
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -18,8 +19,12 @@ bool isBitSet(uint8_t byte, uint8_t n);
 struct Instruction {
     uint16_t pc;
     std::string mnemonic;
-    std::string operands;
+    std::optional<std::string> operand1;
+    std::optional<std::string> operand2;
     std::vector<uint8_t> bytes;
+
+    std::string bytesToString();
+    std::string operandsToString();
 };
 
 nlohmann::json readOpcodes();

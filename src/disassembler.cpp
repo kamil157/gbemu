@@ -19,7 +19,7 @@ int main(int argc, char** argv)
         uint16_t pc = 0u;
         while (pc < rom->size()) {
             Instruction instr = disassemble(rom, pc);
-            std::cout << fmt::format("{:04x} {:<6} {}", instr.pc, instr.mnemonic, instr.operands) << std::endl;
+            std::cout << fmt::format("{:<6} {:<15} ; {:04x} ; {}", instr.mnemonic, instr.operandsToString(), instr.pc, instr.bytesToString()) << std::endl;
             pc += instr.bytes.size();
         }
         return 0;
