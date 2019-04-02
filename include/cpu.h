@@ -41,6 +41,8 @@ private:
 
     // Set flag in register f to b.
     void setFlag(uint8_t flag, bool b);
+    uint16_t getDE() const;
+    void setDE(uint8_t hi, uint8_t lo);
     void setHL(uint8_t hi, uint8_t lo);
     void setHL(uint16_t nn);
     uint16_t getHL() const;

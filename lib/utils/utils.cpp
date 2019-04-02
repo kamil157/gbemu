@@ -100,7 +100,7 @@ Instruction disassemble(const byteCodePtr& code, uint16_t pc)
     switch (code->at(pc)) {
     case 0xE0:
         // Put A into memory address $FF00+n.
-        instr.operand1 = fmt::format("($FF00+{:02x})", code->at(pc + 1));
+        instr.operand1 = fmt::format("($FF{:02x})", code->at(pc + 1));
         break;
     case 0xE2:
         // Put A into address $FF00 + register C.
