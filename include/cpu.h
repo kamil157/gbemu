@@ -30,8 +30,14 @@ private:
     uint8_t c = 0;
     uint8_t d = 0;
     uint8_t e = 0;
-    uint8_t h = 0;
-    uint8_t l = 0;
+
+    union {
+        struct {
+            uint8_t l;
+            uint8_t h;
+        };
+        uint16_t hl;
+    };
 
     uint16_t sp = 0; // Stack Pointer
     uint16_t pc = 0; // Program Counter
@@ -43,10 +49,6 @@ private:
     void setFlag(uint8_t flag, bool b);
     uint16_t getDE() const;
     void setDE(uint8_t hi, uint8_t lo);
-    void setHL(uint8_t hi, uint8_t lo);
-    void setHL(uint16_t nn);
-    uint16_t getHL() const;
-    void decrementHL();
     void setSP(uint8_t hi, uint8_t lo);
     bool runExtendedCommand();
     uint8_t byte1();

@@ -12,6 +12,7 @@ const uint8_t flagH = 5;
 
 Cpu::Cpu(const byteCodePtr& code, std::unique_ptr<Mmu> mmu)
     : code(code)
+    , hl(0)
     , mmu(std::move(mmu))
 {
 }
@@ -19,11 +20,6 @@ Cpu::Cpu(const byteCodePtr& code, std::unique_ptr<Mmu> mmu)
 uint16_t Cpu::getPc() const
 {
     return pc;
-}
-
-uint16_t Cpu::getHL() const
-{
-    return static_cast<uint16_t>(h << 8 | l);
 }
 
 uint16_t Cpu::getDE() const
@@ -35,23 +31,6 @@ void Cpu::setDE(uint8_t hi, uint8_t lo)
 {
     d = hi;
     e = lo;
-}
-
-void Cpu::setHL(uint8_t hi, uint8_t lo)
-{
-    h = hi;
-    l = lo;
-}
-
-void Cpu::setHL(uint16_t nn)
-{
-    h = nn >> 8;
-    l = nn & 0xff;
-}
-
-void Cpu::decrementHL()
-{
-    setHL(getHL() - 1);
 }
 
 void Cpu::setSP(uint8_t hi, uint8_t lo)
@@ -141,7 +120,8 @@ bool Cpu::runCommand()
         break;
     case 0x21:
         // LD HL,nn
-        setHL(byte2(), byte1());
+        h = byte2();
+        l = byte1();
         break;
     case 0x31:
         // LD SP,nn
@@ -149,8 +129,8 @@ bool Cpu::runCommand()
         break;
     case 0x32:
         // LDD (HL),A
-        mmu->set(getHL(), a);
-        decrementHL();
+        mmu->set(hl, a);
+        --hl;
         break;
     case 0x3E:
         // LD A,n
@@ -158,7 +138,7 @@ bool Cpu::runCommand()
         break;
     case 0x77:
         // LD (HL),A
-        mmu->set(getHL(), a);
+        mmu->set(hl, a);
         break;
     case 0xAF:
         // XOR A
