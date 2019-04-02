@@ -19,6 +19,8 @@ void run(const byteCodePtr& code)
         std::cout << fmt::format("{:04x} {:<10} {:<6} {:<13} {}\n", instr.pc, instr.bytesToString(), instr.mnemonic, instr.operandsToString(), cpu.toString());
         pc = cpu.getPc();
     }
+    Instruction instr = disassemble(code, pc);
+    std::cout << fmt::format("{:04x} {:<10} {:<6} {:<13}\n", instr.pc, instr.bytesToString(), instr.mnemonic, instr.operandsToString());
 }
 
 int main(int argc, char** argv)

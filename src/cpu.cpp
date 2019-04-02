@@ -67,94 +67,90 @@ void Cpu::setFlag(uint8_t flag, bool b)
 bool Cpu::runExtendedCommand()
 {
     bool success = true;
-    switch (code->at(pc + 1)) {
+    switch (byte1()) {
     case 0x7C:
         // BIT 7,H
         setFlag(flagZ, !isBitSet(7, h));
         setFlag(flagN, 0);
         setFlag(flagH, 1);
-        cycles += 8;
         break;
     default:
-        std::cerr << fmt::format("Unimplemented opcode: {:02X} {:02X}\n", code->at(pc), code->at(pc + 1));
-        success = false;
-        break;
+        std::cerr << fmt::format("Unimplemented opcode: {:02X} {:02X}\n", code->at(pc), byte1());
+        return false;
     }
 
     return success;
 }
 
-uint8_t Cpu::ld(uint8_t& reg)
+uint8_t Cpu::byte1()
 {
-    // LD reg,n
-    reg = code->at(pc + 1);
-    cycles += 8;
-    return 2;
+    return code->at(pc + 1);
+}
+
+uint8_t Cpu::byte2()
+{
+    return code->at(pc + 2);
 }
 
 bool Cpu::runCommand()
 {
     bool success = true;
-    uint8_t bytes = 1;
+    uint8_t length = 1;
+
+    if (auto opcode = getOpcode(code, pc)) {
+        length = opcode->at("length");
+        auto jsonCycles = opcode->at("cycles");
+        if (jsonCycles.size() == 1) {
+            // There can be 2 values here, instructions need to implement that themselves.
+            cycles += int(jsonCycles.at(0));
+        }
+    }
     switch (code->at(pc)) {
     case 0x0E:
         // LD C,n
-        bytes = ld(c);
+        c = byte1();
         break;
     case 0x20:
         // JR NZ,n
         if (f[flagZ]) {
-            pc += 2 + static_cast<int8_t>(code->at(pc + 1));
-            return success;
+            pc += static_cast<int8_t>(byte1());
         }
-        cycles += 8;
-        bytes = 2;
         break;
     case 0x21:
         // LD HL,nn
-        setHL(code->at(pc + 2), code->at(pc + 1));
-        cycles += 12;
-        bytes = 3;
+        setHL(byte2(), byte1());
         break;
     case 0x31: {
         // LD SP,nn
-        setSP(code->at(pc + 2), code->at(pc + 1));
-        cycles += 12;
-        bytes = 3;
+        setSP(byte2(), byte1());
         break;
     }
     case 0x32: {
         // LDD (HL),A
         mmu->set(getHL(), a);
         decrementHL();
-        cycles += 8;
         break;
     }
     case 0x3E:
         // LD A,n
-        bytes = ld(a);
+        a = byte1();
         break;
     case 0xAF:
         // XOR A
         a = a ^ a;
-        cycles += 4;
         break;
     case 0xCB:
-        bytes = 2;
         success = runExtendedCommand();
         break;
     case 0xE2:
         // LD ($FF00+C),A
         mmu->set(0xFF00 + c, a);
-        cycles += 8;
         break;
     default:
         std::cerr << fmt::format("Unimplemented opcode: {:02X}\n", code->at(pc));
-        success = false;
-        bytes = 0;
-        break;
+        return false;
     }
 
-    pc += bytes;
+    pc += length;
     return success;
 }

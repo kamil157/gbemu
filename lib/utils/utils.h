@@ -28,6 +28,7 @@ struct Instruction {
 };
 
 nlohmann::json readOpcodes();
+std::optional<nlohmann::json> getOpcode(const byteCodePtr& code, uint16_t pc);
 
 // Disassemble 8080 opcodes into assembly language.
 Instruction disassemble(const byteCodePtr& code, uint16_t pc);

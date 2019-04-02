@@ -10,6 +10,8 @@
 #include <ostream>
 #include <vector>
 
+#include <nlohmann/json.hpp>
+
 class Cpu {
 public:
     Cpu(const byteCodePtr& code, std::unique_ptr<Mmu> mmu);
@@ -37,9 +39,6 @@ private:
     int cycles = 0;
     std::unique_ptr<Mmu> mmu;
 
-    // Load operand into register.
-    uint8_t ld(uint8_t& reg);
-
     // Set flag in register f to b.
     void setFlag(uint8_t flag, bool b);
     void setHL(uint8_t hi, uint8_t lo);
@@ -48,6 +47,8 @@ private:
     void decrementHL();
     void setSP(uint8_t hi, uint8_t lo);
     bool runExtendedCommand();
+    uint8_t byte1();
+    uint8_t byte2();
 };
 
 #endif // CPU_H
