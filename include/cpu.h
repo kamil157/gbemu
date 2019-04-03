@@ -58,12 +58,15 @@ private:
 
     // Set flag in register f to b.
     void setFlag(uint8_t flag, bool b);
-    uint16_t getDE() const;
-    void setDE(uint8_t hi, uint8_t lo);
     void setSP(uint8_t hi, uint8_t lo);
     bool runExtendedCommand();
     uint8_t byte1();
     uint8_t byte2();
+    // Push nn to stack.
+    void push(uint16_t nn);
+    void setFlagsFromJson(nlohmann::json opcode);
+    // Rotate reg left, put old bit 7 in flag C and set Z if result is zero.
+    void rotateLeft(uint8_t& reg);
 };
 
 #endif // CPU_H
