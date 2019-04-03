@@ -96,65 +96,22 @@ bool Cpu::runCommand()
         }
     }
     switch (code->at(pc)) {
-    case 0x0C:
-        // INC C
-        c++;
-        break;
-    case 0x0E:
-        // LD C,n
-        c = byte1();
-        break;
-    case 0x11:
-        // LD DE,nn
-        setDE(byte2(), byte1());
-        break;
-    case 0x1A:
-        // LD A,(DE)
-        a = mmu->get(getDE());
-        break;
-    case 0x20:
-        // JR NZ,n
-        if (f[flagZ]) {
-            pc += static_cast<int8_t>(byte1());
-        }
-        break;
-    case 0x21:
-        // LD HL,nn
-        h = byte2();
-        l = byte1();
-        break;
-    case 0x31:
-        // LD SP,nn
-        setSP(byte2(), byte1());
-        break;
-    case 0x32:
-        // LDD (HL),A
-        mmu->set(hl, a);
-        --hl;
-        break;
-    case 0x3E:
-        // LD A,n
-        a = byte1();
-        break;
-    case 0x77:
-        // LD (HL),A
-        mmu->set(hl, a);
-        break;
-    case 0xAF:
-        // XOR A
-        a = a ^ a;
-        break;
-    case 0xCB:
-        success = runExtendedCommand();
-        break;
-    case 0xE0:
-        // LDH ($FF00+n),A
-        mmu->set(0xFF00 + byte1(), a);
-        break;
-    case 0xE2:
-        // LD ($FF00+C),A
-        mmu->set(0xFF00 + c, a);
-        break;
+    // clang-format off
+    case 0x0C: c++;                                              break; // INC C
+    case 0x0E: c = byte1();                                      break; // LD C,n
+    case 0x11: setDE(byte2(), byte1());                          break; // LD DE,nn
+    case 0x1A: a = mmu->get(getDE());                            break; // LD A,(DE)
+    case 0x20: if (f[flagZ]) pc += static_cast<int8_t>(byte1()); break; // JR NZ,n
+    case 0x21: h = byte2(); l = byte1();                         break; // LD HL,nn
+    case 0x31: setSP(byte2(), byte1());                          break; // LD SP,nn
+    case 0x32: mmu->set(hl--, a);                                break; // LDD (HL),A
+    case 0x3E: a = byte1();                                      break; // LD A,n
+    case 0x77: mmu->set(hl, a);                                  break; // LD (HL),A
+    case 0xAF: a = a ^ a;                                        break; // XOR A
+    case 0xCB: success = runExtendedCommand();                   break;
+    case 0xE0: mmu->set(0xFF00 + byte1(), a);                    break; // LDH ($FF00+n),A
+    case 0xE2: mmu->set(0xFF00 + c, a);                          break; // LD ($FF00+C),A
+    // clang-format on
     default:
         std::cerr << fmt::format("Unimplemented opcode: {:02X}\n", code->at(pc));
         return false;
