@@ -26,10 +26,21 @@ private:
     std::bitset<8> f; // Status flags
 
     // General purpose registers
-    uint8_t b = 0;
-    uint8_t c = 0;
-    uint8_t d = 0;
-    uint8_t e = 0;
+    union {
+        struct {
+            uint8_t c;
+            uint8_t b;
+        };
+        uint16_t bc;
+    };
+
+    union {
+        struct {
+            uint8_t e;
+            uint8_t d;
+        };
+        uint16_t de;
+    };
 
     union {
         struct {

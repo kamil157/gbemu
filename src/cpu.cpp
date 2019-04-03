@@ -12,6 +12,8 @@ const uint8_t flagH = 5;
 
 Cpu::Cpu(const byteCodePtr& code, std::unique_ptr<Mmu> mmu)
     : code(code)
+    , bc(0)
+    , de(0)
     , hl(0)
     , mmu(std::move(mmu))
 {
@@ -22,17 +24,6 @@ uint16_t Cpu::getPc() const
     return pc;
 }
 
-uint16_t Cpu::getDE() const
-{
-    return static_cast<uint16_t>(d << 8 | e);
-}
-
-void Cpu::setDE(uint8_t hi, uint8_t lo)
-{
-    d = hi;
-    e = lo;
-}
-
 void Cpu::setSP(uint8_t hi, uint8_t lo)
 {
     sp = static_cast<uint16_t>(hi << 8) | lo;
@@ -41,7 +32,7 @@ void Cpu::setSP(uint8_t hi, uint8_t lo)
 std::string Cpu::toString() const
 {
     std::string flags = f.to_string().substr(0, 4);
-    return fmt::format("a={:02x} f={} bc={:02x}{:02x} de={:02x}{:02x} hl={:02x}{:02x} sp={:04x} pc={:04x} ", a, flags, b, c, d, e, h, l, sp, pc);
+    return fmt::format("a={:02x} f={} bc={:04x} de={:04x} hl={:04x} sp={:04x} pc={:04x} ", a, flags, bc, de, hl, sp, pc);
 }
 
 std::ostream& operator<<(std::ostream& os, Cpu const& cpu)
@@ -99,8 +90,8 @@ bool Cpu::runCommand()
     // clang-format off
     case 0x0C: c++;                                              break; // INC C
     case 0x0E: c = byte1();                                      break; // LD C,n
-    case 0x11: setDE(byte2(), byte1());                          break; // LD DE,nn
-    case 0x1A: a = mmu->get(getDE());                            break; // LD A,(DE)
+    case 0x11: d = byte2(); e = byte1();                         break; // LD DE,nn
+    case 0x1A: a = mmu->get(de);                                 break; // LD A,(DE)
     case 0x20: if (f[flagZ]) pc += static_cast<int8_t>(byte1()); break; // JR NZ,n
     case 0x21: h = byte2(); l = byte1();                         break; // LD HL,nn
     case 0x31: setSP(byte2(), byte1());                          break; // LD SP,nn
