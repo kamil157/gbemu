@@ -92,6 +92,8 @@ std::optional<std::string> readOperandValue(const byteCodePtr& code, uint16_t pc
         return fmt::format("${:02x}", code->at(pc + 1));
     } else if (operand == "d16" || operand == "a16") {
         return fmt::format("${:02x}{:02x}", code->at(pc + 2), code->at(pc + 1));
+    } else if (operand == "(a16)") {
+        return fmt::format("$({:02x}{:02x})", code->at(pc + 2), code->at(pc + 1));
     }
     return operand;
 }
@@ -127,6 +129,9 @@ Instruction disassemble(const byteCodePtr& code, uint16_t pc)
     case 0xE2:
         // Put A into address $FF00 + register C.
         instr.operand1 = "($FF00+C)";
+        break;
+    case 0xF0:
+        instr.operand2 = fmt::format("($FF{:02x})", code->at(pc + 1));
         break;
     }
 

@@ -74,8 +74,10 @@ private:
     void setFlagsFromJson(nlohmann::json opcode);
     // Rotate reg left, put old bit 7 in flag C and set Z if result is zero.
     void rotateLeft(uint8_t& reg);
-    void relativeJump(uint8_t flag);
+    void relativeJump(bool condition);
     void call();
+    void cp(uint8_t n);
+    void sub(uint8_t n);
 };
 
 #endif // CPU_H

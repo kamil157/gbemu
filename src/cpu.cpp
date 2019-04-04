@@ -125,10 +125,10 @@ void Cpu::push(uint16_t nn)
 }
 
 // JR flag,n
-void Cpu::relativeJump(uint8_t flag)
+void Cpu::relativeJump(bool condition)
 {
     uint8_t offset = read();
-    if (f[flag]) {
+    if (condition) {
         pc += static_cast<int8_t>(offset);
     }
 }
@@ -161,6 +161,19 @@ void Cpu::xorA(uint8_t reg)
     setFlag(flagZ, a == 0);
 }
 
+void Cpu::cp(uint8_t n)
+{
+    setFlag(flagZ, a == n);
+    setFlag(flagH, isHalfCarryNegative(static_cast<int8_t>(a), static_cast<int8_t>(n)));
+    setFlag(flagC, a < n);
+}
+
+void Cpu::sub(uint8_t n)
+{
+    cp(n);
+    a -= n;
+}
+
 bool Cpu::runCommand()
 {
     bool success = true;
@@ -177,27 +190,50 @@ bool Cpu::runCommand()
     uint8_t opcode = read();
     switch (opcode) {
     // clang-format off
+    case 0x04: inc(b);                                                             break; // INC B
     case 0x05: dec(b);                                                             break; // DEC B
     case 0x06: b = read();                                                         break; // LD B,n
     case 0x0C: inc(c);                                                             break; // INC C
+    case 0x0D: dec(c);                                                             break; // DEC C
     case 0x0E: c = read();                                                         break; // LD C,n
     case 0x11: de = read16();                                                      break; // LD DE,nn
+    case 0x13: ++de;                                                               break; // INC DE
+    case 0x15: dec(d);                                                             break; // DEC D
+    case 0x16: d = read();                                                         break; // LD D,n
     case 0x17: rotateLeft(a);                                                      break; // RLA
+    case 0x18: relativeJump(true);                                                 break; // JR n
     case 0x1A: a = mmu->get(de);                                                   break; // LD A,(DE)
-    case 0x20: relativeJump(flagZ);                                                break; // JR NZ,n
+    case 0x1D: dec(e);                                                             break; // DEC E
+    case 0x1E: e = read();                                                         break; // LD E,n
+    case 0x20: relativeJump(f[flagZ]);                                             break; // JR NZ,n
     case 0x21: hl = read16();                                                      break; // LD HL,nn
+    case 0x22: mmu->set(hl++, a);                                                  break; // LD (HL+),A
+    case 0x23: ++hl;                                                               break; // INC HL
+    case 0x24: inc(h);                                                             break; // INC H
+    case 0x28: relativeJump(!f[flagZ]);                                            break; // JR Z,n
     case 0x31: sp = read16();                                                      break; // LD SP,nn
     case 0x32: mmu->set(hl--, a);                                                  break; // LDD (HL),A
+    case 0x3D: dec(a);                                                             break; // DEC A
     case 0x3E: a = read();                                                         break; // LD A,n
     case 0x4F: c = a;                                                              break; // LD C,A
+    case 0x57: d = a;                                                              break; // LD D,A
+    case 0x67: h = a;                                                              break; // LD H,A
     case 0x77: mmu->set(hl, a);                                                    break; // LD (HL),A
+    case 0x7B: a = e;                                                              break; // LD A,E
+    case 0x7C: a = h;                                                              break; // LD A,H
+    case 0x90: sub(b);                                                             break; // SUB B
     case 0xAF: xorA(a);                                                            break; // XOR A
+    case 0xBE: cp(mmu->get(hl));                                                   break; // CP (HL)
     case 0xC1: bc = pop();                                                         break; // POP BC
+    case 0xC9: pc = pop();                                                         break; // RET
     case 0xC5: push(bc);                                                           break; // PUSH BC
     case 0xCB: success = runExtendedCommand();                                     break;
     case 0xCD: call();                                                             break; // CALL nn
     case 0xE0: mmu->set(0xFF00 + read(), a);                                       break; // LDH ($FF00+n),A
     case 0xE2: mmu->set(0xFF00 + c, a);                                            break; // LD ($FF00+C),A
+    case 0xEA: mmu->set(read16(), a);                                              break; // LD ($nn),A
+    case 0xF0: a = mmu->get(0xFF00 + read());                                      break; // LDH A,(n)
+    case 0xFE: cp(read());                                                         break; // CP n
     // clang-format on
     default:
         std::cerr << fmt::format("Unimplemented opcode: {:02X}\n", opcode);
