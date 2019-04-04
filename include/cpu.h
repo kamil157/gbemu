@@ -58,15 +58,24 @@ private:
 
     // Set flag in register f to b.
     void setFlag(uint8_t flag, bool b);
-    void setSP(uint8_t hi, uint8_t lo);
     bool runExtendedCommand();
-    uint8_t byte1();
-    uint8_t byte2();
+    uint8_t read();
+    uint16_t read16();
+    // Decrement reg.
+    void dec(uint8_t& reg);
+    // Increment reg.
+    void inc(uint8_t& reg);
+    // xor a with reg, store result in a.
+    void xorA(uint8_t reg);
+    // Pop nn from stack.
+    uint16_t pop();
     // Push nn to stack.
     void push(uint16_t nn);
     void setFlagsFromJson(nlohmann::json opcode);
     // Rotate reg left, put old bit 7 in flag C and set Z if result is zero.
     void rotateLeft(uint8_t& reg);
+    void relativeJump(uint8_t flag);
+    void call();
 };
 
 #endif // CPU_H

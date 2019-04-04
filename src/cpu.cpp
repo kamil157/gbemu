@@ -27,11 +27,6 @@ uint16_t Cpu::getPc() const
     return pc;
 }
 
-void Cpu::setSP(uint8_t hi, uint8_t lo)
-{
-    sp = static_cast<uint16_t>(hi << 8) | lo;
-}
-
 std::string Cpu::toString() const
 {
     std::string flags = f.to_string().substr(0, 4);
@@ -86,9 +81,8 @@ void Cpu::rotateLeft(uint8_t& reg)
 
 bool Cpu::runExtendedCommand()
 {
-    bool success = true;
-
-    switch (byte1()) {
+    uint8_t opcode = read();
+    switch (opcode) {
     case 0x11:
         // RL C
         rotateLeft(c);
@@ -98,21 +92,30 @@ bool Cpu::runExtendedCommand()
         setFlag(flagZ, !isBitSet(7, h));
         break;
     default:
-        std::cerr << fmt::format("Unimplemented opcode: {:02X} {:02X}\n", code->at(pc), byte1());
+        std::cerr << fmt::format("Unimplemented opcode: CB {:02X}\n", opcode);
         return false;
     }
 
-    return success;
+    return true;
 }
 
-uint8_t Cpu::byte1()
+uint8_t Cpu::read()
 {
-    return code->at(pc + 1);
+    return code->at(pc++);
 }
 
-uint8_t Cpu::byte2()
+uint16_t Cpu::read16()
 {
-    return code->at(pc + 2);
+    uint8_t lo = read();
+    uint8_t hi = read();
+    return concatBytes(lo, hi);
+}
+
+uint16_t Cpu::pop()
+{
+    uint8_t lo = mmu->get(sp++);
+    uint8_t hi = mmu->get(sp++);
+    return concatBytes(lo, hi);
 }
 
 void Cpu::push(uint16_t nn)
@@ -121,48 +124,85 @@ void Cpu::push(uint16_t nn)
     mmu->set(--sp, nn & 0xFF);
 }
 
+// JR flag,n
+void Cpu::relativeJump(uint8_t flag)
+{
+    uint8_t offset = read();
+    if (f[flag]) {
+        pc += static_cast<int8_t>(offset);
+    }
+}
+
+// CALL nn
+void Cpu::call()
+{
+    uint16_t target = read16();
+    push(pc);
+    pc = target;
+}
+
+void Cpu::dec(uint8_t& reg)
+{
+    --reg;
+    setFlag(flagH, isHalfCarryNegative(static_cast<int8_t>(reg), -1));
+    setFlag(flagZ, reg == 0);
+}
+
+void Cpu::inc(uint8_t& reg)
+{
+    ++reg;
+    setFlag(flagH, isHalfCarry(reg, 1));
+    setFlag(flagZ, reg == 0);
+}
+
+void Cpu::xorA(uint8_t reg)
+{
+    a ^= reg;
+    setFlag(flagZ, a == 0);
+}
+
 bool Cpu::runCommand()
 {
     bool success = true;
-    uint8_t length = 1;
 
-    if (auto opcode = getOpcode(code, pc)) {
-        setFlagsFromJson(*opcode);
-        length = opcode->at("length");
-        auto jsonCycles = opcode->at("cycles");
+    if (auto opcodeData = getOpcodeData(code, pc)) {
+        setFlagsFromJson(*opcodeData);
+        auto jsonCycles = opcodeData->at("cycles");
         if (jsonCycles.size() == 1) {
             // There can be 2 values here, instructions need to implement that themselves.
             cycles += int(jsonCycles.at(0));
         }
     }
 
-    switch (code->at(pc)) {
+    uint8_t opcode = read();
+    switch (opcode) {
     // clang-format off
-    case 0x06: b = byte1();                                                        break; // LD B,n
-    case 0x0C: c++;                                                                break; // INC C
-    case 0x0E: c = byte1();                                                        break; // LD C,n
-    case 0x11: d = byte2(); e = byte1();                                           break; // LD DE,nn
+    case 0x05: dec(b);                                                             break; // DEC B
+    case 0x06: b = read();                                                         break; // LD B,n
+    case 0x0C: inc(c);                                                             break; // INC C
+    case 0x0E: c = read();                                                         break; // LD C,n
+    case 0x11: de = read16();                                                      break; // LD DE,nn
     case 0x17: rotateLeft(a);                                                      break; // RLA
     case 0x1A: a = mmu->get(de);                                                   break; // LD A,(DE)
-    case 0x20: if (f[flagZ]) pc += static_cast<int8_t>(byte1());                   break; // JR NZ,n
-    case 0x21: h = byte2(); l = byte1();                                           break; // LD HL,nn
-    case 0x31: setSP(byte2(), byte1());                                            break; // LD SP,nn
+    case 0x20: relativeJump(flagZ);                                                break; // JR NZ,n
+    case 0x21: hl = read16();                                                      break; // LD HL,nn
+    case 0x31: sp = read16();                                                      break; // LD SP,nn
     case 0x32: mmu->set(hl--, a);                                                  break; // LDD (HL),A
-    case 0x3E: a = byte1();                                                        break; // LD A,n
+    case 0x3E: a = read();                                                         break; // LD A,n
     case 0x4F: c = a;                                                              break; // LD C,A
     case 0x77: mmu->set(hl, a);                                                    break; // LD (HL),A
-    case 0xAF: a = a ^ a;                                                          break; // XOR A
+    case 0xAF: xorA(a);                                                            break; // XOR A
+    case 0xC1: bc = pop();                                                         break; // POP BC
     case 0xC5: push(bc);                                                           break; // PUSH BC
     case 0xCB: success = runExtendedCommand();                                     break;
-    case 0xCD: push(pc + length); pc = byte1();                              return true; // CALL nn
-    case 0xE0: mmu->set(0xFF00 + byte1(), a);                                      break; // LDH ($FF00+n),A
+    case 0xCD: call();                                                             break; // CALL nn
+    case 0xE0: mmu->set(0xFF00 + read(), a);                                       break; // LDH ($FF00+n),A
     case 0xE2: mmu->set(0xFF00 + c, a);                                            break; // LD ($FF00+C),A
     // clang-format on
     default:
-        std::cerr << fmt::format("Unimplemented opcode: {:02X}\n", code->at(pc));
+        std::cerr << fmt::format("Unimplemented opcode: {:02X}\n", opcode);
         return false;
     }
 
-    pc += length;
     return success;
 }
