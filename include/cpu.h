@@ -61,6 +61,14 @@ private:
     bool runExtendedCommand();
     uint8_t read();
     uint16_t read16();
+    // Decrement reg.
+    void dec(uint8_t& reg);
+    // Increment reg.
+    void inc(uint8_t& reg);
+    // xor a with reg, store result in a.
+    void xorA(uint8_t reg);
+    // Pop nn from stack.
+    uint16_t pop();
     // Push nn to stack.
     void push(uint16_t nn);
     void setFlagsFromJson(nlohmann::json opcode);
