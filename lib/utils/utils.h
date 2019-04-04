@@ -16,6 +16,9 @@ byteCodePtr readFile(const std::string& path);
 // Test if bit n of byte is set.
 bool isBitSet(uint8_t byte, uint8_t n);
 
+// Concatenate 2 bytes into 16 bit int.
+uint16_t concatBytes(uint8_t lo, uint8_t hi);
+
 struct Instruction {
     uint16_t pc;
     std::string mnemonic;

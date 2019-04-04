@@ -47,6 +47,11 @@ bool isBitSet(uint8_t byte, uint8_t n)
     return (byte >> n) & 1;
 }
 
+uint16_t concatBytes(uint8_t lo, uint8_t hi)
+{
+    return static_cast<uint16_t>(hi << 8) | lo;
+}
+
 std::optional<json> getOpcode(const byteCodePtr& code, uint16_t pc)
 {
     bool isPrefixed = code->at(pc) == 0xCB;

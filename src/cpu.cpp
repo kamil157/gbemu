@@ -27,16 +27,6 @@ uint16_t Cpu::getPc() const
     return pc;
 }
 
-void Cpu::setSP(uint8_t lo, uint8_t hi)
-{
-    sp = static_cast<uint16_t>(hi << 8) | lo;
-}
-
-void Cpu::setPC(uint8_t lo, uint8_t hi)
-{
-    pc = static_cast<uint16_t>(hi << 8) | lo;
-}
-
 std::string Cpu::toString() const
 {
     std::string flags = f.to_string().substr(0, 4);
@@ -116,6 +106,13 @@ uint8_t Cpu::read()
     return code->at(pc++);
 }
 
+uint16_t Cpu::read16()
+{
+    uint8_t lo = read();
+    uint8_t hi = read();
+    return concatBytes(lo, hi);
+}
+
 void Cpu::push(uint16_t nn)
 {
     mmu->set(--sp, nn >> 8);
@@ -137,7 +134,7 @@ void Cpu::call()
     uint8_t lo = read();
     uint8_t hi = read();
     push(pc);
-    setPC(lo, hi);
+    pc = concatBytes(lo, hi);
 }
 
 bool Cpu::runCommand()
@@ -159,12 +156,12 @@ bool Cpu::runCommand()
     case 0x06: b = read();                                                         break; // LD B,n
     case 0x0C: c++;                                                                break; // INC C
     case 0x0E: c = read();                                                         break; // LD C,n
-    case 0x11: e = read(); d = read();                                             break; // LD DE,nn
+    case 0x11: de = read16();                                                      break; // LD DE,nn
     case 0x17: rotateLeft(a);                                                      break; // RLA
     case 0x1A: a = mmu->get(de);                                                   break; // LD A,(DE)
     case 0x20: relativeJump(flagZ);                                                break; // JR NZ,n
-    case 0x21: l = read(); h = read();                                             break; // LD HL,nn
-    case 0x31: setSP(read(), read());                                              break; // LD SP,nn
+    case 0x21: hl = read16();                                                      break; // LD HL,nn
+    case 0x31: sp = read16();                                                      break; // LD SP,nn
     case 0x32: mmu->set(hl--, a);                                                  break; // LDD (HL),A
     case 0x3E: a = read();                                                         break; // LD A,n
     case 0x4F: c = a;                                                              break; // LD C,A

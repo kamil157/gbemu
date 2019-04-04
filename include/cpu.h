@@ -58,10 +58,9 @@ private:
 
     // Set flag in register f to b.
     void setFlag(uint8_t flag, bool b);
-    void setSP(uint8_t lo, uint8_t hi);
-    void setPC(uint8_t lo, uint8_t hi);
     bool runExtendedCommand();
     uint8_t read();
+    uint16_t read16();
     // Push nn to stack.
     void push(uint16_t nn);
     void setFlagsFromJson(nlohmann::json opcode);
