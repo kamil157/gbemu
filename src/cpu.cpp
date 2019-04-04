@@ -154,7 +154,7 @@ bool Cpu::runCommand()
     case 0xAF: a = a ^ a;                                                          break; // XOR A
     case 0xC5: push(bc);                                                           break; // PUSH BC
     case 0xCB: success = runExtendedCommand();                                     break;
-    case 0xCD: push(pc + 1); pc = byte1();                                   return true; // CALL nn
+    case 0xCD: push(pc + length); pc = byte1();                              return true; // CALL nn
     case 0xE0: mmu->set(0xFF00 + byte1(), a);                                      break; // LDH ($FF00+n),A
     case 0xE2: mmu->set(0xFF00 + c, a);                                            break; // LD ($FF00+C),A
     // clang-format on
