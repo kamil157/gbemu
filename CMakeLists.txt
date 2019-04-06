@@ -8,16 +8,17 @@ project(gbemu)
 set (CMAKE_CXX_STANDARD 17)
 
 set(JSON_BuildTests OFF CACHE INTERNAL "")
-set(SPDLOG_BUILD_TESTING OFF)
+set(SPDLOG_BUILD_TESTING OFF CACHE INTERNAL "")
 
 add_subdirectory(lib/fmt EXCLUDE_FROM_ALL)
 add_subdirectory(lib/spdlog EXCLUDE_FROM_ALL)
-add_subdirectory(lib/nlohmann_json)
-add_subdirectory(lib/catch)
+
+add_library(nlohmann_json INTERFACE)
+target_include_directories(nlohmann_json INTERFACE lib/nlohmann_json)
 
 add_library(utils src/utils.cpp include/utils.h)
 target_include_directories(utils PRIVATE include)
-target_link_libraries(utils fmt::fmt nlohmann_json::nlohmann_json)
+target_link_libraries(utils fmt::fmt nlohmann_json)
 
 add_executable(disassembler src/disassembler.cpp)
 target_include_directories(disassembler PRIVATE include)

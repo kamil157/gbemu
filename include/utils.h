@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-#include <nlohmann/json.hpp>
+#include <json.hpp>
 
 using byteCodePtr = std::shared_ptr<std::vector<uint8_t>>;
 

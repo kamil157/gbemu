@@ -10,7 +10,7 @@
 #include <ostream>
 #include <vector>
 
-#include <nlohmann/json.hpp>
+#include <json.hpp>
 
 class Cpu {
 public:
