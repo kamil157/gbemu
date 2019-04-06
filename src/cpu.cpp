@@ -144,14 +144,14 @@ void Cpu::call()
 void Cpu::dec(uint8_t& reg)
 {
     --reg;
-    setFlag(flagH, isHalfCarryNegative(static_cast<int8_t>(reg), -1));
+    setFlag(flagH, isHalfCarrySubtraction(static_cast<int8_t>(reg), -1));
     setFlag(flagZ, reg == 0);
 }
 
 void Cpu::inc(uint8_t& reg)
 {
     ++reg;
-    setFlag(flagH, isHalfCarry(reg, 1));
+    setFlag(flagH, isHalfCarryAddition(reg, 1));
     setFlag(flagZ, reg == 0);
 }
 
@@ -164,7 +164,7 @@ void Cpu::xorA(uint8_t reg)
 void Cpu::cp(uint8_t n)
 {
     setFlag(flagZ, a == n);
-    setFlag(flagH, isHalfCarryNegative(static_cast<int8_t>(a), static_cast<int8_t>(n)));
+    setFlag(flagH, isHalfCarrySubtraction(static_cast<int8_t>(a), static_cast<int8_t>(n)));
     setFlag(flagC, a < n);
 }
 

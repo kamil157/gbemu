@@ -42,14 +42,14 @@ byteCodePtr readFile(const std::string& path)
     return std::make_shared<std::vector<uint8_t>>(std::istreambuf_iterator<char>(input), std::istreambuf_iterator<char>());
 }
 
-bool isHalfCarry(uint8_t n, uint8_t m)
+bool isHalfCarryAddition(uint8_t n, uint8_t m)
 {
     return ((n & 0xf) + (m & 0xf)) > 0xf;
 }
 
-bool isHalfCarryNegative(int8_t n, int8_t m)
+bool isHalfCarrySubtraction(int8_t n, int8_t m)
 {
-    return (n & 0xf) + (m & 0xf) < 0;
+    return (n & 0xf) - (m & 0xf) < 0;
 }
 
 bool isBitSet(uint8_t byte, uint8_t n)

@@ -14,10 +14,10 @@ using byteCodePtr = std::shared_ptr<std::vector<uint8_t>>;
 byteCodePtr readFile(const std::string& path);
 
 // Return true if adding n + m results in carry from low nibble to high (bit 3 to 4).
-bool isHalfCarry(uint8_t n, uint8_t m);
+bool isHalfCarryAddition(uint8_t n, uint8_t m);
 
 // Return true if subtracting n - m does not result in borrowing from high nibble to low (bit 4 to 3).
-bool isHalfCarryNegative(int8_t n, int8_t m);
+bool isHalfCarrySubtraction(int8_t n, int8_t m);
 
 // Test if bit n of byte is set.
 bool isBitSet(uint8_t byte, uint8_t n);
