@@ -38,7 +38,7 @@ int main(int argc, char** argv)
         run(romFilename);
         return 0;
     } catch (const std::exception& e) {
-        spdlog::error("{}\n", e.what());
+        spdlog::error(e.what());
         return 1;
     }
 }

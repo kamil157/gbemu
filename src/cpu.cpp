@@ -196,6 +196,7 @@ bool Cpu::runCommand()
     uint8_t opcode = read();
     switch (opcode) {
     // clang-format off
+    case 0x00:                                                                     break; // NOP
     case 0x04: inc(b);                                                             break; // INC B
     case 0x05: dec(b);                                                             break; // DEC B
     case 0x06: b = read();                                                         break; // LD B,n
@@ -234,6 +235,7 @@ bool Cpu::runCommand()
     case 0xAF: xorA(a);                                                            break; // XOR A
     case 0xBE: cp(mmu->get(hl));                                                   break; // CP (HL)
     case 0xC1: bc = pop();                                                         break; // POP BC
+    case 0xC3: pc = read16();                                                      break; // JP nn
     case 0xC9: pc = pop();                                                         break; // RET
     case 0xC5: push(bc);                                                           break; // PUSH BC
     case 0xCB: success = runExtendedCommand();                                     break;
