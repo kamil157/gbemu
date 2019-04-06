@@ -28,11 +28,11 @@ set(CORE_SOURCES src/cpu.cpp src/mmu.cpp)
 set(CORE_HEADERS include/cpu.h include/mmu.h)
 add_library(core ${CORE_SOURCES} ${CORE_HEADERS})
 target_include_directories(core PRIVATE include)
-target_link_libraries(core utils)
+target_link_libraries(core utils spdlog)
 
 add_executable(emulator src/emulator.cpp)
 target_include_directories(emulator PRIVATE include)
-target_link_libraries(emulator spdlog core)
+target_link_libraries(emulator core)
 
 add_library(catch INTERFACE)
 target_include_directories(catch INTERFACE lib/catch/single_include/catch2)

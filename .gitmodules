@@ -4,6 +4,7 @@
 [submodule "lib/spdlog"]
 	path = lib/spdlog
 	url = https://github.com/gabime/spdlog
+	branch = v1.x
 [submodule "lib/opcodes"]
 	path = lib/opcodes
 	url = https://github.com/qrvd/game-boy-opcodes

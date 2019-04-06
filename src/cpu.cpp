@@ -5,6 +5,7 @@
 #include <iostream>
 
 #include "fmt/format.h"
+#include "spdlog/spdlog.h"
 
 using json = nlohmann::json;
 
@@ -92,7 +93,7 @@ bool Cpu::runExtendedCommand()
         setFlag(flagZ, !isBitSet(7, h));
         break;
     default:
-        std::cerr << fmt::format("Unimplemented opcode: CB {:02X}\n", opcode);
+        spdlog::error("Unimplemented opcode: CB {:02X}", opcode);
         return false;
     }
 
@@ -236,7 +237,7 @@ bool Cpu::runCommand()
     case 0xFE: cp(read());                                                         break; // CP n
     // clang-format on
     default:
-        std::cerr << fmt::format("Unimplemented opcode: {:02X}\n", opcode);
+        spdlog::error("Unimplemented opcode: {:02X}", opcode);
         return false;
     }
 
