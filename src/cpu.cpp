@@ -14,11 +14,11 @@ const uint8_t flagN = 6;
 const uint8_t flagH = 5;
 const uint8_t flagC = 4;
 
-Cpu::Cpu(std::unique_ptr<Mmu> mmu)
+Cpu::Cpu(const std::shared_ptr<Mmu>& mmu)
     : bc(0)
     , de(0)
     , hl(0)
-    , mmu(std::move(mmu))
+    , mmu(mmu)
 {
 }
 

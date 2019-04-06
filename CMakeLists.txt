@@ -7,8 +7,11 @@ project(gbemu)
 
 set (CMAKE_CXX_STANDARD 17)
 
+set(CMAKE_AUTOMOC ON)
 set(JSON_BuildTests OFF CACHE INTERNAL "")
 set(SPDLOG_BUILD_TESTING OFF CACHE INTERNAL "")
+
+find_package(Qt5Widgets CONFIG REQUIRED)
 
 add_subdirectory(lib/fmt EXCLUDE_FROM_ALL)
 add_subdirectory(lib/spdlog EXCLUDE_FROM_ALL)
@@ -32,7 +35,7 @@ target_link_libraries(core utils spdlog)
 
 add_executable(emulator src/emulator.cpp)
 target_include_directories(emulator PRIVATE include)
-target_link_libraries(emulator core)
+target_link_libraries(emulator core Qt5::Widgets)
 
 add_library(catch INTERFACE)
 target_include_directories(catch INTERFACE lib/catch/single_include/catch2)

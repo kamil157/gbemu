@@ -7,23 +7,97 @@
 
 #include "spdlog/spdlog.h"
 
-void run(const std::string& romFilename)
-{
-    auto mmu = std::make_unique<Mmu>();
-    auto bootstrapRom = readFile("../gbemu/res/bootstrap.bin");
-    mmu->load(0, bootstrapRom);
-    auto cartridgeRom = readFile(romFilename);
-    mmu->load(0x100, cartridgeRom);
-    Cpu cpu{ std::move(mmu) };
-    uint16_t pc = 0u;
-    bootstrapRom->insert(bootstrapRom->end(), cartridgeRom->begin(), cartridgeRom->end());
-    while (cpu.runCommand()) {
-        Instruction instr = disassemble(bootstrapRom, pc);
-        spdlog::trace("{:04x} {:<10} {:<6} {:<13} {}", instr.pc, instr.bytesToString(), instr.mnemonic, instr.operandsToString(), cpu.toString());
-        pc = cpu.getPc();
+#include <QApplication>
+#include <QGraphicsScene>
+#include <QLabel>
+#include <QObject>
+#include <QPixmap>
+#include <QTimer>
+
+#include <QObject>
+
+class Emulator : public QObject {
+    Q_OBJECT
+
+public:
+    Emulator(const std::string& romFilename)
+        : cpu(nullptr)
+    {
+        mmu = std::make_shared<Mmu>();
+        bootstrapRom = readFile("../gbemu/res/bootstrap.bin");
+        mmu->load(0, bootstrapRom);
+        auto cartridgeRom = readFile(romFilename);
+        mmu->load(0x100, cartridgeRom);
+        cpu = Cpu{ mmu };
+        bootstrapRom->insert(bootstrapRom->end(), cartridgeRom->begin(), cartridgeRom->end());
     }
-    Instruction instr = disassemble(bootstrapRom, pc);
-    spdlog::trace("{:04x} {:<10} {:<6} {:<13}", instr.pc, instr.bytesToString(), instr.mnemonic, instr.operandsToString());
+
+public slots:
+    // Run one command and signal Gui.
+    void run()
+    {
+        bool result = cpu.runCommand();
+        if (result) {
+            Instruction instr = disassemble(bootstrapRom, pc);
+            spdlog::trace("{:04x} {:<10} {:<6} {:<13} {}", instr.pc, instr.bytesToString(), instr.mnemonic, instr.operandsToString(), cpu.toString());
+            pc = cpu.getPc();
+
+            QTimer::singleShot(0, [this] { emit next(mmu->getVram()); });
+            return;
+        }
+        Instruction instr = disassemble(bootstrapRom, pc);
+        spdlog::trace("{:04x} {:<10} {:<6} {:<13}", instr.pc, instr.bytesToString(), instr.mnemonic, instr.operandsToString());
+    }
+
+signals:
+    void next(std::vector<uint8_t>);
+
+private:
+    Cpu cpu;
+    std::shared_ptr<Mmu> mmu;
+    uint16_t pc = 0u;
+    byteCodePtr bootstrapRom;
+};
+
+class Gui : public QObject {
+    Q_OBJECT
+
+public:
+    Gui()
+    {
+        QImage image(256, 256, QImage::Format_RGB32);
+        label.setPixmap(QPixmap::fromImage(image));
+        label.show();
+    }
+
+public slots:
+    // Draw contents of vram on label and signal Emulator.
+    void draw(std::vector<uint8_t> vram)
+    {
+        QPixmap pixmap = QPixmap::fromImage(QImage(vram.data(), 256, 256, QImage::Format::Format_MonoLSB));
+        label.setPixmap(pixmap);
+        emit next();
+    }
+
+signals:
+    void next();
+
+private:
+    QLabel label;
+};
+
+int runGui(int argc, char** argv)
+{
+    QApplication app(argc, argv);
+    Gui gui;
+    auto romFilename = argv[1];
+    Emulator emu{ romFilename };
+
+    QObject::connect(&emu, SIGNAL(next(std::vector<uint8_t>)), &gui, SLOT(draw(std::vector<uint8_t>)));
+    QObject::connect(&gui, SIGNAL(next()), &emu, SLOT(run()));
+    emu.run();
+
+    return app.exec();
 }
 
 int main(int argc, char** argv)
@@ -34,11 +108,12 @@ int main(int argc, char** argv)
         if (argc < 2) {
             throw std::runtime_error("Please provide rom name.");
         }
-        auto romFilename = argv[1];
-        run(romFilename);
+        runGui(argc, argv);
         return 0;
     } catch (const std::exception& e) {
         spdlog::error(e.what());
         return 1;
     }
 }
+
+#include "emulator.moc"

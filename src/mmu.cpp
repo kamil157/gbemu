@@ -6,7 +6,7 @@
 #include <spdlog/spdlog.h>
 
 Mmu::Mmu()
-    : memory(0xffff, 0)
+    : memory(0xffff, 0xff)
 {
 }
 
@@ -28,4 +28,10 @@ uint8_t Mmu::get(uint16_t address) const
 void Mmu::load(uint16_t address, const byteCodePtr& code)
 {
     memory.insert(memory.begin() + address, code->begin(), code->end());
+}
+
+std::vector<uint8_t> Mmu::getVram() const
+{
+    // VRAM is between 0x8000 and 0xA000
+    return std::vector<uint8_t>{ memory.begin() + 0x8000, memory.begin() + 0xA000 };
 }

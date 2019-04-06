@@ -14,7 +14,7 @@
 
 class Cpu {
 public:
-    Cpu(std::unique_ptr<Mmu> mmu);
+    Cpu(const std::shared_ptr<Mmu>& mmu);
     bool runCommand();
     uint16_t getPc() const;
     std::string toString() const;
@@ -52,7 +52,7 @@ private:
     uint16_t pc = 0; // Program Counter
 
     int cycles = 0;
-    std::unique_ptr<Mmu> mmu;
+    std::shared_ptr<Mmu> mmu;
 
     // Set flag in register f to b.
     void setFlag(uint8_t flag, bool b);
