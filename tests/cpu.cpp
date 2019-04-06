@@ -7,8 +7,6 @@
 
 TEST_CASE("Cpu starts with pc 0", "[cpu]")
 {
-    byteCodePtr code;
-    auto mmu = std::make_unique<Mmu>();
-    Cpu cpu{ code, std::move(mmu) };
+    Cpu cpu{ std::make_unique<Mmu>() };
     REQUIRE(cpu.getPc() == 0);
 }

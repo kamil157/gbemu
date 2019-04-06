@@ -14,9 +14,8 @@ const uint8_t flagN = 6;
 const uint8_t flagH = 5;
 const uint8_t flagC = 4;
 
-Cpu::Cpu(const byteCodePtr& code, std::unique_ptr<Mmu> mmu)
-    : code(code)
-    , bc(0)
+Cpu::Cpu(std::unique_ptr<Mmu> mmu)
+    : bc(0)
     , de(0)
     , hl(0)
     , mmu(std::move(mmu))
@@ -102,7 +101,7 @@ bool Cpu::runExtendedCommand()
 
 uint8_t Cpu::read()
 {
-    return code->at(pc++);
+    return mmu->get(pc++);
 }
 
 uint16_t Cpu::read16()
@@ -125,7 +124,6 @@ void Cpu::push(uint16_t nn)
     mmu->set(--sp, nn & 0xFF);
 }
 
-// JR flag,n
 void Cpu::relativeJump(bool condition)
 {
     uint8_t offset = read();
@@ -134,7 +132,6 @@ void Cpu::relativeJump(bool condition)
     }
 }
 
-// CALL nn
 void Cpu::call()
 {
     uint16_t target = read16();
@@ -175,11 +172,19 @@ void Cpu::sub(uint8_t n)
     a -= n;
 }
 
+void Cpu::add(uint8_t n)
+{
+    setFlag(flagH, isHalfCarryAddition(a, n));
+    setFlag(flagC, a + n > 0xff);
+    a += n;
+    setFlag(flagZ, a == 0);
+}
+
 bool Cpu::runCommand()
 {
     bool success = true;
 
-    if (auto opcodeData = getOpcodeData(code, pc)) {
+    if (auto opcodeData = getOpcodeData(mmu->get(pc), mmu->get(pc + 1))) {
         setFlagsFromJson(*opcodeData);
         auto jsonCycles = opcodeData->at("cycles");
         if (jsonCycles.size() == 1) {
@@ -220,8 +225,11 @@ bool Cpu::runCommand()
     case 0x57: d = a;                                                              break; // LD D,A
     case 0x67: h = a;                                                              break; // LD H,A
     case 0x77: mmu->set(hl, a);                                                    break; // LD (HL),A
+    case 0x78: a = b;                                                              break; // LD A,B
     case 0x7B: a = e;                                                              break; // LD A,E
     case 0x7C: a = h;                                                              break; // LD A,H
+    case 0x7D: a = l;                                                              break; // LD A,L
+    case 0x86: add(mmu->get(hl));                                                  break; // ADD A,(HL)
     case 0x90: sub(b);                                                             break; // SUB B
     case 0xAF: xorA(a);                                                            break; // XOR A
     case 0xBE: cp(mmu->get(hl));                                                   break; // CP (HL)

@@ -62,11 +62,11 @@ uint16_t concatBytes(uint8_t lo, uint8_t hi)
     return static_cast<uint16_t>(hi << 8) | lo;
 }
 
-std::optional<json> getOpcodeData(const byteCodePtr& code, uint16_t pc)
+std::optional<json> getOpcodeData(uint8_t unprefixedOpcode, uint8_t prefixedOpcode)
 {
-    bool isPrefixed = code->at(pc) == 0xCB;
+    bool isPrefixed = unprefixedOpcode == 0xCB;
     std::string commandType = isPrefixed ? "cbprefixed" : "unprefixed";
-    uint8_t opcode = isPrefixed ? code->at(pc + 1) : code->at(pc);
+    uint8_t opcode = isPrefixed ? prefixedOpcode : unprefixedOpcode;
     std::string opcodeHex = fmt::format("{:#02x}", opcode);
     if (!opcodes.at(commandType).contains(opcodeHex)) {
         return {}; // Unimplemented
@@ -104,7 +104,7 @@ Instruction disassemble(const byteCodePtr& code, uint16_t pc)
     Instruction instr;
     instr.pc = pc;
     auto opbytes = 1u;
-    if (auto opcode = getOpcodeData(code, pc)) {
+    if (auto opcode = getOpcodeData(code->at(pc), code->at(pc + 1))) {
         instr.mnemonic = opcode->at("mnemonic");
         opbytes = opcode->at("length");
         if (opcode->contains("operand1")) {

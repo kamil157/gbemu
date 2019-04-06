@@ -14,14 +14,12 @@
 
 class Cpu {
 public:
-    Cpu(const byteCodePtr& code, std::unique_ptr<Mmu> mmu);
+    Cpu(std::unique_ptr<Mmu> mmu);
     bool runCommand();
     uint16_t getPc() const;
     std::string toString() const;
 
 private:
-    byteCodePtr code;
-
     uint8_t a = 0; // Accumulator
     std::bitset<8> f; // Status flags
 
@@ -74,10 +72,21 @@ private:
     void setFlagsFromJson(nlohmann::json opcode);
     // Rotate reg left, put old bit 7 in flag C and set Z if result is zero.
     void rotateLeft(uint8_t& reg);
+
+    // JR n, JR cc,n - add n to current address and jump to it, if condition is met.
     void relativeJump(bool condition);
+
+    // CALL nn - push address of next instruction onto stack and then jump to address nn.
     void call();
+
+    // CP n - compare a with n.
     void cp(uint8_t n);
+
+    // SUB n - subtract n from a.
     void sub(uint8_t n);
+
+    // ADD A,n - add n to a.
+    void add(uint8_t n);
 };
 
 #endif // CPU_H
