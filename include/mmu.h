@@ -17,10 +17,13 @@ public:
     uint8_t get(uint16_t address) const;
 
     // Load code into memory starting at address.
-    void load(uint16_t address, const byteCodePtr& code);
+    void load(uint16_t address, const std::vector<uint8_t>& code);
 
     // Return a copy of VRAM data.
     std::vector<uint8_t> getVram() const;
+
+    // Return contents of memory.
+    std::vector<uint8_t> getMemory() const;
 
 private:
     std::vector<uint8_t> memory;

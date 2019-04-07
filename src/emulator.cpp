@@ -24,12 +24,11 @@ public:
         : cpu(nullptr)
     {
         mmu = std::make_shared<Mmu>();
-        bootstrapRom = readFile("../gbemu/res/bootstrap.bin");
+        auto bootstrapRom = readFile("../gbemu/res/bootstrap.bin");
         mmu->load(0, bootstrapRom);
         auto cartridgeRom = readFile(romFilename);
         mmu->load(0x100, cartridgeRom);
         cpu = Cpu{ mmu };
-        bootstrapRom->insert(bootstrapRom->end(), cartridgeRom->begin(), cartridgeRom->end());
     }
 
 public slots:
@@ -38,14 +37,14 @@ public slots:
     {
         bool result = cpu.runCommand();
         if (result) {
-            Instruction instr = disassemble(bootstrapRom, pc);
+            Instruction instr = disassemble(mmu->getMemory(), pc);
             spdlog::trace("{:04x} {:<10} {:<6} {:<13} {}", instr.pc, instr.bytesToString(), instr.mnemonic, instr.operandsToString(), cpu.toString());
             pc = cpu.getPc();
 
             QTimer::singleShot(0, [this] { emit next(mmu->getVram()); });
             return;
         }
-        Instruction instr = disassemble(bootstrapRom, pc);
+        Instruction instr = disassemble(mmu->getMemory(), pc);
         spdlog::trace("{:04x} {:<10} {:<6} {:<13}", instr.pc, instr.bytesToString(), instr.mnemonic, instr.operandsToString());
     }
 
@@ -56,7 +55,6 @@ private:
     Cpu cpu;
     std::shared_ptr<Mmu> mmu;
     uint16_t pc = 0u;
-    byteCodePtr bootstrapRom;
 };
 
 class Gui : public QObject {

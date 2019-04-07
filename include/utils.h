@@ -8,10 +8,8 @@
 
 #include <json.hpp>
 
-using byteCodePtr = std::shared_ptr<std::vector<uint8_t>>;
-
 // Read whole file into a buffer and return it.
-byteCodePtr readFile(const std::string& path);
+std::vector<uint8_t> readFile(const std::string& path);
 
 // Return true if adding n + m results in carry from low nibble to high (bit 3 to 4).
 bool isHalfCarryAddition(uint8_t n, uint8_t m);
@@ -41,7 +39,7 @@ nlohmann::json readOpcodes();
 // Get opcode data from json.
 std::optional<nlohmann::json> getOpcodeData(uint8_t unprefixedOpcode, uint8_t prefixedOpcode);
 
-// Disassemble 8080 opcodes into assembly language.
-Instruction disassemble(const byteCodePtr& code, uint16_t pc);
+// Disassemble LR35902 opcodes into assembly language.
+Instruction disassemble(const std::vector<uint8_t>& code, uint16_t pc);
 
 #endif // UTILS_H

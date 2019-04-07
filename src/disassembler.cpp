@@ -17,7 +17,7 @@ int main(int argc, char** argv)
         }
         auto rom = readFile(argv[1]);
         uint16_t pc = 0u;
-        while (pc < rom->size()) {
+        while (pc < rom.size()) {
             Instruction instr = disassemble(rom, pc);
             std::cout << fmt::format("{:<6} {:<15} ; {:04x} ; {}", instr.mnemonic, instr.operandsToString(), instr.pc, instr.bytesToString()) << std::endl;
             pc += instr.bytes.size();

@@ -25,13 +25,18 @@ uint8_t Mmu::get(uint16_t address) const
     return memory.at(address);
 }
 
-void Mmu::load(uint16_t address, const byteCodePtr& code)
+void Mmu::load(uint16_t address, const std::vector<uint8_t>& rom)
 {
-    memory.insert(memory.begin() + address, code->begin(), code->end());
+    memory.insert(memory.begin() + address, rom.begin(), rom.end());
 }
 
 std::vector<uint8_t> Mmu::getVram() const
 {
     // VRAM is between 0x8000 and 0xA000
     return std::vector<uint8_t>{ memory.begin() + 0x8000, memory.begin() + 0xA000 };
+}
+
+std::vector<uint8_t> Mmu::getMemory() const
+{
+    return memory;
 }

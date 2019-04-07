@@ -31,7 +31,7 @@ std::string Instruction::operandsToString()
     return operands.str();
 }
 
-byteCodePtr readFile(const std::string& path)
+std::vector<uint8_t> readFile(const std::string& path)
 {
     std::ifstream input(path, std::ios::binary);
     if (input.fail()) {
@@ -39,7 +39,7 @@ byteCodePtr readFile(const std::string& path)
     }
 
     // Copies all data into buffer
-    return std::make_shared<std::vector<uint8_t>>(std::istreambuf_iterator<char>(input), std::istreambuf_iterator<char>());
+    return std::vector<uint8_t>{ std::istreambuf_iterator<char>(input), std::istreambuf_iterator<char>() };
 }
 
 bool isHalfCarryAddition(uint8_t n, uint8_t m)
@@ -86,25 +86,24 @@ json readOpcodes()
     return opcodes;
 }
 
-std::optional<std::string> readOperandValue(const byteCodePtr& code, uint16_t pc, const std::optional<std::string>& operand)
+std::optional<std::string> readOperandValue(const std::vector<uint8_t>& memory, uint16_t pc, const std::optional<std::string>& operand)
 {
     if (operand == "d8" || operand == "r8") {
-        return fmt::format("${:02x}", code->at(pc + 1));
+        return fmt::format("${:02x}", memory.at(pc + 1));
     } else if (operand == "d16" || operand == "a16") {
-        return fmt::format("${:02x}{:02x}", code->at(pc + 2), code->at(pc + 1));
+        return fmt::format("${:02x}{:02x}", memory.at(pc + 2), memory.at(pc + 1));
     } else if (operand == "(a16)") {
-        return fmt::format("$({:02x}{:02x})", code->at(pc + 2), code->at(pc + 1));
+        return fmt::format("$({:02x}{:02x})", memory.at(pc + 2), memory.at(pc + 1));
     }
     return operand;
 }
 
-// Disassemble LR35902 opcodes into assembly language
-Instruction disassemble(const byteCodePtr& code, uint16_t pc)
+Instruction disassemble(const std::vector<uint8_t>& memory, uint16_t pc)
 {
     Instruction instr;
     instr.pc = pc;
     auto opbytes = 1u;
-    if (auto opcode = getOpcodeData(code->at(pc), code->at(pc + 1))) {
+    if (auto opcode = getOpcodeData(memory.at(pc), memory.size() > pc + 1 ? memory.at(pc + 1) : 0)) {
         instr.mnemonic = opcode->at("mnemonic");
         opbytes = opcode->at("length");
         if (opcode->contains("operand1")) {
@@ -115,23 +114,23 @@ Instruction disassemble(const byteCodePtr& code, uint16_t pc)
         }
     }
     for (uint8_t i = 0; i < opbytes; ++i) {
-        instr.bytes.push_back(code->at(pc + i));
+        instr.bytes.push_back(memory.at(pc + i));
     }
 
-    instr.operand1 = readOperandValue(code, pc, instr.operand1);
-    instr.operand2 = readOperandValue(code, pc, instr.operand2);
+    instr.operand1 = readOperandValue(memory, pc, instr.operand1);
+    instr.operand2 = readOperandValue(memory, pc, instr.operand2);
 
-    switch (code->at(pc)) {
+    switch (memory.at(pc)) {
     case 0xE0:
         // Put A into memory address $FF00+n.
-        instr.operand1 = fmt::format("($FF{:02x})", code->at(pc + 1));
+        instr.operand1 = fmt::format("($FF{:02x})", memory.at(pc + 1));
         break;
     case 0xE2:
         // Put A into address $FF00 + register C.
         instr.operand1 = "($FF00+C)";
         break;
     case 0xF0:
-        instr.operand2 = fmt::format("($FF{:02x})", code->at(pc + 1));
+        instr.operand2 = fmt::format("($FF{:02x})", memory.at(pc + 1));
         break;
     }
 
