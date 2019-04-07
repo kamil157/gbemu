@@ -3,6 +3,7 @@
 #include "utils.h"
 
 #include <exception>
+#include <memory>
 #include <stdexcept>
 
 #include "spdlog/spdlog.h"
@@ -25,9 +26,9 @@ public:
     {
         mmu = std::make_shared<Mmu>();
         auto bootstrapRom = readFile("../gbemu/res/bootstrap.bin");
-        mmu->load(0, bootstrapRom);
+        mmu->loadBootstrap(bootstrapRom);
         auto cartridgeRom = readFile(romFilename);
-        mmu->load(0x100, cartridgeRom);
+        mmu->loadCartridge(cartridgeRom);
         cpu = Cpu{ mmu };
     }
 
@@ -49,7 +50,7 @@ public slots:
     }
 
 signals:
-    void next(std::vector<uint8_t>);
+    void next(const std::vector<uint8_t>&);
 
 private:
     Cpu cpu;
@@ -70,7 +71,7 @@ public:
 
 public slots:
     // Draw contents of vram on label and signal Emulator.
-    void draw(std::vector<uint8_t> vram)
+    void draw(const std::vector<uint8_t>& vram)
     {
         QPixmap pixmap = QPixmap::fromImage(QImage(vram.data(), 256, 256, QImage::Format::Format_MonoLSB));
         label.setPixmap(pixmap);
@@ -91,7 +92,7 @@ int runGui(int argc, char** argv)
     auto romFilename = argv[1];
     Emulator emu{ romFilename };
 
-    QObject::connect(&emu, SIGNAL(next(std::vector<uint8_t>)), &gui, SLOT(draw(std::vector<uint8_t>)));
+    QObject::connect(&emu, SIGNAL(next(const std::vector<uint8_t>&)), &gui, SLOT(draw(const std::vector<uint8_t>&)));
     QObject::connect(&gui, SIGNAL(next()), &emu, SLOT(run()));
     emu.run();
 

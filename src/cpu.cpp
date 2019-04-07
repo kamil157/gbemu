@@ -212,12 +212,13 @@ bool Cpu::runCommand()
     case 0x1A: a = mmu->get(de);                                                   break; // LD A,(DE)
     case 0x1D: dec(e);                                                             break; // DEC E
     case 0x1E: e = read();                                                         break; // LD E,n
-    case 0x20: relativeJump(f[flagZ]);                                             break; // JR NZ,n
+    case 0x20: relativeJump(f[flagZ] == 0);                                        break; // JR NZ,n
     case 0x21: hl = read16();                                                      break; // LD HL,nn
     case 0x22: mmu->set(hl++, a);                                                  break; // LD (HL+),A
     case 0x23: ++hl;                                                               break; // INC HL
     case 0x24: inc(h);                                                             break; // INC H
-    case 0x28: relativeJump(!f[flagZ]);                                            break; // JR Z,n
+    case 0x28: relativeJump(f[flagZ] == 1);                                        break; // JR Z,n
+    case 0x2E: l = read();                                                         break; // LD L,n
     case 0x31: sp = read16();                                                      break; // LD SP,nn
     case 0x32: mmu->set(hl--, a);                                                  break; // LDD (HL),A
     case 0x3D: dec(a);                                                             break; // DEC A
