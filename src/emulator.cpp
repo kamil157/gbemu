@@ -64,7 +64,7 @@ class Gui : public QObject {
 public:
     Gui()
     {
-        QImage image(256, 256, QImage::Format_RGB32);
+        QImage image(128, 256, QImage::Format_RGB32);
         label.setPixmap(QPixmap::fromImage(image));
         label.show();
     }
@@ -73,7 +73,43 @@ public slots:
     // Draw contents of vram on label and signal Emulator.
     void draw(const std::vector<uint8_t>& vram)
     {
-        QPixmap pixmap = QPixmap::fromImage(QImage(vram.data(), 256, 256, QImage::Format::Format_MonoLSB));
+        //        QPixmap pixmap = QPixmap::fromImage(QImage(vram.data(), 256, 256, QImage::Format::Format_Mono));
+        QImage image(128, 256, QImage::Format::Format_RGB32);
+        image.fill(Qt::green);
+        for (auto tileY = 0; tileY < 32; ++tileY) {
+            for (auto tileX = 0; tileX < 16; ++tileX) {
+                for (auto line = 0; line < 8; ++line) {
+                    auto index = 2 * line + tileY * 64 + tileX * 8;
+                    auto byte0 = vram[index + 1];
+                    auto byte1 = vram[index];
+                    for (auto pixel = 7; pixel >= 0; --pixel) {
+                        auto bit0 = (byte0 >> pixel) & 1;
+                        auto bit1 = (byte1 >> pixel) & 1;
+                        auto color = (bit0 << 1) + bit1;
+
+                        QColor qColor;
+                        switch (color) {
+                        case 0:
+                            qColor = Qt::gray;
+                            break;
+                        case 1:
+                            qColor = Qt::darkGray;
+                            break;
+                        case 2:
+                            qColor = Qt::white;
+                            break;
+                        case 3:
+                            qColor = Qt::black;
+                            break;
+                        }
+                        auto x = tileX * 8 + 7 - pixel;
+                        auto y = tileY * 8 + line;
+                        image.setPixelColor(x, y, qColor);
+                    }
+                }
+            }
+        }
+        QPixmap pixmap = QPixmap::fromImage(image);
         label.setPixmap(pixmap);
         emit next();
     }

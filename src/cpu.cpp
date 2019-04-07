@@ -107,7 +107,7 @@ bool Cpu::executeExtended()
     case 0x1A: rotateRight(d);                                                     break; // RR D
     case 0x3F: shiftRight(a);                                                      break; // SRL A
     case 0x38: shiftRight(b);                                                      break; // SRL B
-    case 0x7C: setFlag(flagZ, !isBitSet(7, h));                                    break; // BIT 7,H
+    case 0x7C: setFlag(flagZ, isBitSet(7, h));                                     break; // BIT 7,H
     // clang-format on
     default:
         spdlog::error("Unimplemented opcode: CB {:02X}", opcode);
