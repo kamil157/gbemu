@@ -6,8 +6,9 @@
 #include <spdlog/spdlog.h>
 
 Mmu::Mmu()
-    : memory(0xffff, 0xff)
+    : memory(0x10000, 0xff)
 {
+    memory[0xff44] = 0x90;
 }
 
 void Mmu::set(uint16_t address, uint8_t value)
@@ -20,7 +21,7 @@ void Mmu::set(uint16_t address, uint8_t value)
     // Writing the value of 1 to the address 0xFF50 unmaps the boot ROM.
     if (address == 0xFF50 && value == 0x01) {
         spdlog::info("Unmapping boot ROM.");
-        memory.insert(memory.begin(), cartridgeStart.begin(), cartridgeStart.end());
+        loadBootstrap(cartridgeStart);
     }
     memory.at(address) = value;
 }
@@ -32,6 +33,7 @@ uint8_t Mmu::get(uint16_t address) const
 
 void Mmu::loadBootstrap(const std::vector<uint8_t>& rom)
 {
+    memory.erase(memory.begin(), memory.begin() + 0x100);
     memory.insert(memory.begin(), rom.begin(), rom.end());
 }
 
@@ -43,6 +45,8 @@ void Mmu::loadCartridge(const std::vector<uint8_t>& rom)
     }
     // Don't overwrite bootstrap
     cartridgeStart = std::vector<uint8_t>{ rom.begin(), rom.begin() + 0x100 };
+    auto size = static_cast<int>(rom.size());
+    memory.erase(memory.begin() + 0x100, memory.begin() + size);
     memory.insert(memory.begin() + 0x100, rom.begin() + 0x100, rom.end());
 }
 
