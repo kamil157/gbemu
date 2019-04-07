@@ -28,3 +28,10 @@ TEST_CASE("Half carry occurs when, while subtracting two bytes, bit 4 does not b
     REQUIRE(!isHalfCarrySubtraction(0xf, -0x7)); // 0xf - 0x9 = 0x7 >= 0
     REQUIRE(!isHalfCarrySubtraction(static_cast<int8_t>(0xff), static_cast<int8_t>(0xf0))); // 0xf - 0x0 = 0xf >= 0
 }
+
+TEST_CASE("Half carry occurs when, while adding two 16 bit values, bit 11 carries over to bit 12", "[utils]")
+{
+    REQUIRE(isHalfCarryAddition16(0xfff, 0x1)); // 0xfff + 0x1 = 0x1000 > 0xfff
+    REQUIRE(!isHalfCarryAddition16(0x800, 0x7ff)); // 0x800 + 0x7ff = 0xfff <= 0xfff
+    REQUIRE(!isHalfCarryAddition16(0xffff, 0xf000)); // 0xfff + 0xf000 = 0xfff <= 0xfff
+}

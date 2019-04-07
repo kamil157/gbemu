@@ -17,6 +17,9 @@ bool isHalfCarryAddition(uint8_t n, uint8_t m);
 // Return true if subtracting n - m does not result in borrowing from high nibble to low (bit 4 to 3).
 bool isHalfCarrySubtraction(int8_t n, int8_t m);
 
+// Return true if adding n + m results in carry from low nibble to high in high byte (bit 11 to 12).
+bool isHalfCarryAddition16(uint16_t n, uint16_t m);
+
 // Test if bit n of byte is set.
 bool isBitSet(uint8_t byte, uint8_t n);
 

@@ -36,17 +36,17 @@ public slots:
     // Run one command and signal Gui.
     void run()
     {
-        bool result = cpu.runCommand();
+        bool result = cpu.execute();
         if (result) {
             Instruction instr = disassemble(mmu->getMemory(), pc);
             spdlog::trace("{:04x} {:<10} {:<6} {:<13} {}", instr.pc, instr.bytesToString(), instr.mnemonic, instr.operandsToString(), cpu.toString());
-            pc = cpu.getPc();
+            pc = cpu.getPC();
 
             QTimer::singleShot(0, [this] { emit next(mmu->getVram()); });
             return;
         }
         Instruction instr = disassemble(mmu->getMemory(), pc);
-        spdlog::trace("{:04x} {:<10} {:<6} {:<13}", instr.pc, instr.bytesToString(), instr.mnemonic, instr.operandsToString());
+        spdlog::debug("{:04x} {:<10} {:<6} {:<13}", instr.pc, instr.bytesToString(), instr.mnemonic, instr.operandsToString());
     }
 
 signals:
@@ -102,7 +102,7 @@ int runGui(int argc, char** argv)
 int main(int argc, char** argv)
 {
     try {
-        spdlog::set_level(spdlog::level::trace);
+        spdlog::set_level(spdlog::level::debug);
         spdlog::set_pattern("%v");
         if (argc < 2) {
             throw std::runtime_error("Please provide rom name.");

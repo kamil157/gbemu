@@ -52,6 +52,11 @@ bool isHalfCarrySubtraction(int8_t n, int8_t m)
     return (n & 0xf) - (m & 0xf) < 0;
 }
 
+bool isHalfCarryAddition16(uint16_t n, uint16_t m)
+{
+    return ((n & 0xfff) + (m & 0xfff)) > 0xfff;
+}
+
 bool isBitSet(uint8_t byte, uint8_t n)
 {
     return (byte >> n) & 1;
