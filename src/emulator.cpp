@@ -63,6 +63,7 @@ class Gui : public QObject {
 
 public:
     Gui()
+        : vram(0x2000, 0xff)
     {
         QImage image(128, 256, QImage::Format_RGB32);
         label.setPixmap(QPixmap::fromImage(image));
@@ -70,10 +71,15 @@ public:
     }
 
 public slots:
-    // Draw contents of vram on label and signal Emulator.
-    void draw(const std::vector<uint8_t>& vram)
+    void save(const std::vector<uint8_t>& vram)
     {
-        //        QPixmap pixmap = QPixmap::fromImage(QImage(vram.data(), 256, 256, QImage::Format::Format_Mono));
+        this->vram = vram;
+        emit next();
+    }
+
+    // Draw contents of vram on label and signal Emulator.
+    void drawSlot()
+    {
         QImage image(128, 256, QImage::Format::Format_RGB32);
         image.fill(Qt::green);
         for (auto tileY = 0; tileY < 32; ++tileY) {
@@ -111,14 +117,16 @@ public slots:
         }
         QPixmap pixmap = QPixmap::fromImage(image);
         label.setPixmap(pixmap);
-        emit next();
+        QTimer::singleShot(1000 / 60.0, [this] { emit drawSignal(); });
     }
 
 signals:
     void next();
+    void drawSignal();
 
 private:
     QLabel label;
+    std::vector<uint8_t> vram;
 };
 
 int runGui(int argc, char** argv)
@@ -128,9 +136,11 @@ int runGui(int argc, char** argv)
     auto romFilename = argv[1];
     Emulator emu{ romFilename };
 
-    QObject::connect(&emu, SIGNAL(next(const std::vector<uint8_t>&)), &gui, SLOT(draw(const std::vector<uint8_t>&)));
+    QObject::connect(&emu, SIGNAL(next(const std::vector<uint8_t>&)), &gui, SLOT(save(const std::vector<uint8_t>&)));
     QObject::connect(&gui, SIGNAL(next()), &emu, SLOT(run()));
+    QObject::connect(&gui, SIGNAL(drawSignal()), &gui, SLOT(drawSlot()));
     emu.run();
+    gui.drawSlot();
 
     return app.exec();
 }
@@ -139,7 +149,7 @@ int main(int argc, char** argv)
 {
     try {
         spdlog::set_level(spdlog::level::debug);
-        spdlog::set_pattern("%v");
+        spdlog::set_pattern("[%H:%M:%S] %v");
         if (argc < 2) {
             throw std::runtime_error("Please provide rom name.");
         }
