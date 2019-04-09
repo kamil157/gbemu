@@ -6,7 +6,7 @@
 #include <spdlog/spdlog.h>
 
 Mmu::Mmu()
-    : memory(0x10000, 0xff)
+    : memory(0x10000, 0)
 {
     memory[0xff44] = 0x90;
 }

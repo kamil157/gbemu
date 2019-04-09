@@ -32,69 +32,99 @@ public:
         cpu = Cpu{ mmu };
     }
 
+    std::vector<uint8_t> getVram() const
+    {
+        return mmu->getVram();
+    }
+
 public slots:
-    // Run one command and signal Gui.
+    // Run CPU commands in a loop.
     void run()
     {
-        bool result = cpu.execute();
-        if (result) {
-            Instruction instr = disassemble(mmu->getMemory(), pc);
+        Instruction instr = disassemble(mmu->getMemory(), cpu.getPC());
+        if (cpu.execute()) {
             spdlog::trace("{:04x} {:<10} {:<6} {:<13} {}", instr.pc, instr.bytesToString(), instr.mnemonic, instr.operandsToString(), cpu.toString());
-            pc = cpu.getPC();
-
-            QTimer::singleShot(0, [this] { emit next(mmu->getVram()); });
-            return;
+            QTimer::singleShot(0, [this] { emit next(); });
+        } else {
+            spdlog::info("{:04x} {:<10} {:<6} {:<13}", instr.pc, instr.bytesToString(), instr.mnemonic, instr.operandsToString());
         }
-        Instruction instr = disassemble(mmu->getMemory(), pc);
-        spdlog::debug("{:04x} {:<10} {:<6} {:<13}", instr.pc, instr.bytesToString(), instr.mnemonic, instr.operandsToString());
-    }
-
-signals:
-    void next(const std::vector<uint8_t>&);
-
-private:
-    Cpu cpu;
-    std::shared_ptr<Mmu> mmu;
-    uint16_t pc = 0u;
-};
-
-class Gui : public QObject {
-    Q_OBJECT
-
-public:
-    Gui()
-    {
-        QImage image(256, 256, QImage::Format_RGB32);
-        label.setPixmap(QPixmap::fromImage(image));
-        label.show();
-    }
-
-public slots:
-    // Draw contents of vram on label and signal Emulator.
-    void draw(const std::vector<uint8_t>& vram)
-    {
-        QPixmap pixmap = QPixmap::fromImage(QImage(vram.data(), 256, 256, QImage::Format::Format_MonoLSB));
-        label.setPixmap(pixmap);
-        emit next();
     }
 
 signals:
     void next();
 
 private:
+    Cpu cpu;
+    std::shared_ptr<Mmu> mmu;
+};
+
+class Gui : public QObject {
+    Q_OBJECT
+
+public:
+    Gui(const Emulator& emu)
+        : emulator(emu)
+    {
+        QImage image(256, 512, QImage::Format_RGB32);
+        label.setPixmap(QPixmap::fromImage(image));
+        label.show();
+    }
+
+public slots:
+    // Draw contents of VRAM in 60 FPS.
+    void drawSlot()
+    {
+        static const auto linesPerTile = 8;
+        static const auto pixelsPerLine = 8;
+        static const auto tilesPerRow = 16;
+
+        auto vram = emulator.getVram();
+        QImage image(128, 256, QImage::Format_RGB32);
+        for (auto tileY = 0; tileY < 32; ++tileY) {
+            for (auto tileX = 0; tileX < tilesPerRow; ++tileX) {
+                for (auto line = 0; line < linesPerTile; ++line) {
+                    // 2 bytes per line, 8 lines per tile, 16 tiles per row
+                    uint16_t index = static_cast<uint16_t>(2 * (line + linesPerTile * (tileX + tilesPerRow * tileY)));
+                    auto byte1 = vram.at(index);
+                    auto byte0 = vram.at(index + 1);
+                    for (auto pixel = pixelsPerLine - 1; pixel >= 0; --pixel) {
+                        auto bit1 = (byte1 >> pixel) & 1;
+                        auto bit0 = (byte0 >> pixel) & 1;
+                        auto color = (bit0 << 1) + bit1;
+
+                        static const std::vector<QColor> colorMap = { Qt::white, Qt::darkGray, Qt::gray, Qt::black };
+                        QColor qColor = colorMap.at(static_cast<uint8_t>(color));
+                        auto x = tileX * pixelsPerLine + pixelsPerLine - 1 - pixel;
+                        auto y = tileY * linesPerTile + line;
+                        image.setPixelColor(x, y, qColor);
+                    }
+                }
+            }
+        }
+        QPixmap pixmap = QPixmap::fromImage(image.scaled(256, 512));
+        label.setPixmap(pixmap);
+        QTimer::singleShot(1000 / 60.0, [this] { emit drawSignal(); });
+    }
+
+signals:
+    void drawSignal();
+
+private:
     QLabel label;
+    const Emulator& emulator;
 };
 
 int runGui(int argc, char** argv)
 {
     QApplication app(argc, argv);
-    Gui gui;
     auto romFilename = argv[1];
     Emulator emu{ romFilename };
+    Gui gui{ emu };
 
-    QObject::connect(&emu, SIGNAL(next(const std::vector<uint8_t>&)), &gui, SLOT(draw(const std::vector<uint8_t>&)));
-    QObject::connect(&gui, SIGNAL(next()), &emu, SLOT(run()));
+    QObject::connect(&emu, &Emulator::next, &emu, &Emulator::run);
+    QObject::connect(&gui, &Gui::drawSignal, &gui, &Gui::drawSlot);
     emu.run();
+    gui.drawSlot();
 
     return app.exec();
 }
@@ -103,7 +133,7 @@ int main(int argc, char** argv)
 {
     try {
         spdlog::set_level(spdlog::level::debug);
-        spdlog::set_pattern("%v");
+        spdlog::set_pattern("[%H:%M:%S] %v");
         if (argc < 2) {
             throw std::runtime_error("Please provide rom name.");
         }
