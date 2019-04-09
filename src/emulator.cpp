@@ -32,113 +32,97 @@ public:
         cpu = Cpu{ mmu };
     }
 
+    std::vector<uint8_t> getVram() const
+    {
+        return mmu->getVram();
+    }
+
 public slots:
-    // Run one command and signal Gui.
+    // Run CPU commands in a loop.
     void run()
     {
-        bool result = cpu.execute();
-        if (result) {
-            Instruction instr = disassemble(mmu->getMemory(), pc);
+        Instruction instr = disassemble(mmu->getMemory(), cpu.getPC());
+        if (cpu.execute()) {
             spdlog::trace("{:04x} {:<10} {:<6} {:<13} {}", instr.pc, instr.bytesToString(), instr.mnemonic, instr.operandsToString(), cpu.toString());
-            pc = cpu.getPC();
-
-            QTimer::singleShot(0, [this] { emit next(mmu->getVram()); });
-            return;
+            QTimer::singleShot(0, [this] { emit next(); });
+        } else {
+            spdlog::info("{:04x} {:<10} {:<6} {:<13}", instr.pc, instr.bytesToString(), instr.mnemonic, instr.operandsToString());
         }
-        Instruction instr = disassemble(mmu->getMemory(), pc);
-        spdlog::debug("{:04x} {:<10} {:<6} {:<13}", instr.pc, instr.bytesToString(), instr.mnemonic, instr.operandsToString());
     }
 
 signals:
-    void next(const std::vector<uint8_t>&);
+    void next();
 
 private:
     Cpu cpu;
     std::shared_ptr<Mmu> mmu;
-    uint16_t pc = 0u;
 };
 
 class Gui : public QObject {
     Q_OBJECT
 
 public:
-    Gui()
-        : vram(0x2000, 0xff)
+    Gui(const Emulator& emu)
+        : emulator(emu)
     {
-        QImage image(128, 256, QImage::Format_RGB32);
+        QImage image(256, 512, QImage::Format_RGB32);
         label.setPixmap(QPixmap::fromImage(image));
         label.show();
     }
 
 public slots:
-    void save(const std::vector<uint8_t>& vram)
-    {
-        this->vram = vram;
-        emit next();
-    }
-
-    // Draw contents of vram on label and signal Emulator.
+    // Draw contents of VRAM in 60 FPS.
     void drawSlot()
     {
-        QImage image(128, 256, QImage::Format::Format_RGB32);
-        image.fill(Qt::green);
+        static const auto linesPerTile = 8;
+        static const auto pixelsPerLine = 8;
+        static const auto tilesPerRow = 16;
+
+        auto vram = emulator.getVram();
+        QImage image(128, 256, QImage::Format_RGB32);
         for (auto tileY = 0; tileY < 32; ++tileY) {
-            for (auto tileX = 0; tileX < 16; ++tileX) {
-                for (auto line = 0; line < 8; ++line) {
-                    auto index = 2 * line + tileY * 64 + tileX * 8;
-                    auto byte0 = vram[index + 1];
-                    auto byte1 = vram[index];
-                    for (auto pixel = 7; pixel >= 0; --pixel) {
-                        auto bit0 = (byte0 >> pixel) & 1;
+            for (auto tileX = 0; tileX < tilesPerRow; ++tileX) {
+                for (auto line = 0; line < linesPerTile; ++line) {
+                    // 2 bytes per line, 8 lines per tile, 16 tiles per row
+                    uint16_t index = static_cast<uint16_t>(2 * (line + linesPerTile * (tileX + tilesPerRow * tileY)));
+                    auto byte1 = vram.at(index);
+                    auto byte0 = vram.at(index + 1);
+                    for (auto pixel = pixelsPerLine - 1; pixel >= 0; --pixel) {
                         auto bit1 = (byte1 >> pixel) & 1;
+                        auto bit0 = (byte0 >> pixel) & 1;
                         auto color = (bit0 << 1) + bit1;
 
-                        QColor qColor;
-                        switch (color) {
-                        case 0:
-                            qColor = Qt::gray;
-                            break;
-                        case 1:
-                            qColor = Qt::darkGray;
-                            break;
-                        case 2:
-                            qColor = Qt::white;
-                            break;
-                        case 3:
-                            qColor = Qt::black;
-                            break;
-                        }
-                        auto x = tileX * 8 + 7 - pixel;
-                        auto y = tileY * 8 + line;
+                        static const std::vector<QColor> colorMap = { Qt::white, Qt::darkGray, Qt::gray, Qt::black };
+                        QColor qColor = colorMap.at(static_cast<uint8_t>(color));
+                        auto x = tileX * pixelsPerLine + pixelsPerLine - 1 - pixel;
+                        auto y = tileY * linesPerTile + line;
                         image.setPixelColor(x, y, qColor);
                     }
                 }
             }
         }
-        QPixmap pixmap = QPixmap::fromImage(image);
+        QPixmap pixmap = QPixmap::fromImage(image.scaled(256, 512));
         label.setPixmap(pixmap);
         QTimer::singleShot(1000 / 60.0, [this] { emit drawSignal(); });
     }
 
 signals:
-    void next();
     void drawSignal();
 
 private:
     QLabel label;
-    std::vector<uint8_t> vram;
+    const Emulator& emulator;
 };
 
 int runGui(int argc, char** argv)
 {
     QApplication app(argc, argv);
-    Gui gui;
     auto romFilename = argv[1];
     Emulator emu{ romFilename };
+    Gui gui{ emu };
 
-    QObject::connect(&emu, SIGNAL(next(const std::vector<uint8_t>&)), &gui, SLOT(save(const std::vector<uint8_t>&)));
-    QObject::connect(&gui, SIGNAL(next()), &emu, SLOT(run()));
-    QObject::connect(&gui, SIGNAL(drawSignal()), &gui, SLOT(drawSlot()));
+    QObject::connect(&emu, &Emulator::next, &emu, &Emulator::run);
+    QObject::connect(&gui, &Gui::drawSignal, &gui, &Gui::drawSlot);
     emu.run();
     gui.drawSlot();
 
