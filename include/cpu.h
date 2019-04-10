@@ -12,6 +12,10 @@
 
 #include <json.hpp>
 
+struct Registers {
+    uint16_t af, bc, de, hl, sp, pc;
+};
+
 class Cpu {
 public:
     Cpu(const std::shared_ptr<Mmu>& mmu);
@@ -26,10 +30,12 @@ public:
     std::string toString() const;
 
     // Get value of AF register.
-    uint16_t getAF();
+    uint16_t getAF() const;
 
     // Set value of AF register to nn.
     void setAF(uint16_t nn);
+
+    Registers getRegisters() const;
 
 private:
     uint8_t a = 0; // Accumulator

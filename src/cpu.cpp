@@ -22,6 +22,11 @@ Cpu::Cpu(const std::shared_ptr<Mmu>& mmu)
 {
 }
 
+Registers Cpu::getRegisters() const
+{
+    return Registers{ getAF(), bc, de, hl, sp, pc };
+}
+
 uint16_t Cpu::getPC() const
 {
     return pc;
@@ -230,7 +235,7 @@ void disableInterrupts()
     spdlog::warn("DI is unimplemented.");
 }
 
-uint16_t Cpu::getAF()
+uint16_t Cpu::getAF() const
 {
     return static_cast<uint16_t>((a << 8) + static_cast<uint8_t>(f.to_ulong()));
 }
@@ -396,7 +401,7 @@ bool Cpu::execute()
     case 0xC8: ret(f[flagZ] == 1);                                                 break; // RET Z
     case 0xC9: ret(true);                                                          break; // RET
     case 0xC5: push(bc);                                                           break; // PUSH BC
-    case 0xCB: success = executeExtended();                                     break;
+    case 0xCB: success = executeExtended();                                        break;
     case 0xCC: call(f[flagZ] == 1);                                                break; // CALL Z,nn
     case 0xCD: call(true);                                                         break; // CALL nn
     case 0xCE: adc(read());                                                        break; // ADC A,n
