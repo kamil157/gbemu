@@ -19,14 +19,16 @@ public:
     // Execute next instruction.
     bool execute();
 
-    // Get value of PC register.
-    uint16_t getPC() const;
-
     // Get string representation of cpu state.
     std::string toString() const;
 
-    // Get value of AF register.
-    uint16_t getAF();
+    // Get register values.
+    uint16_t getAF() const;
+    uint16_t getBC() const;
+    uint16_t getDE() const;
+    uint16_t getHL() const;
+    uint16_t getSP() const;
+    uint16_t getPC() const;
 
     // Set value of AF register to nn.
     void setAF(uint16_t nn);

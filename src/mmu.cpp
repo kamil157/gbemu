@@ -8,7 +8,7 @@
 Mmu::Mmu()
     : memory(0x10000, 0)
 {
-    memory[0xff44] = 0x90;
+    memory[0xff44] = 0x90; // Don't wait for VBLANK as it's not implemented.
 }
 
 void Mmu::set(uint16_t address, uint8_t value)
@@ -43,7 +43,7 @@ void Mmu::loadCartridge(const std::vector<uint8_t>& rom)
     if (rom.size() > allowedSize) {
         spdlog::warn("Cartridge size not supported. Supported size: 0x{:x}, given size: 0x{:x}", allowedSize, rom.size());
     }
-    // Don't overwrite bootstrap
+    // Don't overwrite the boot ROM.
     cartridgeStart = std::vector<uint8_t>{ rom.begin(), rom.begin() + 0x100 };
     auto size = static_cast<int>(rom.size());
     memory.erase(memory.begin() + 0x100, memory.begin() + size);

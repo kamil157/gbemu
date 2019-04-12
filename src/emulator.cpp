@@ -1,5 +1,7 @@
-#include "cpu.h"
+#include "emulator.h"
 
+#include "cpu.h"
+#include "debugger.h"
 #include "utils.h"
 
 #include <exception>
@@ -9,7 +11,6 @@
 #include "spdlog/spdlog.h"
 
 #include <QApplication>
-#include <QGraphicsScene>
 #include <QLabel>
 #include <QObject>
 #include <QPixmap>
@@ -17,46 +18,31 @@
 
 #include <QObject>
 
-class Emulator : public QObject {
-    Q_OBJECT
+Emulator::Emulator(const std::shared_ptr<Mmu>& mmu, Cpu& cpu, const std::string& romFilename)
+    : cpu(cpu)
+    , mmu(mmu)
+{
+    auto bootstrapRom = readFile("../gbemu/res/bootstrap.bin");
+    mmu->loadBootstrap(bootstrapRom);
+    auto cartridgeRom = readFile(romFilename);
+    mmu->loadCartridge(cartridgeRom);
+}
 
-public:
-    Emulator(const std::string& romFilename)
-        : cpu(nullptr)
-    {
-        mmu = std::make_shared<Mmu>();
-        auto bootstrapRom = readFile("../gbemu/res/bootstrap.bin");
-        mmu->loadBootstrap(bootstrapRom);
-        auto cartridgeRom = readFile(romFilename);
-        mmu->loadCartridge(cartridgeRom);
-        cpu = Cpu{ mmu };
+std::vector<uint8_t> Emulator::getVram() const
+{
+    return mmu->getVram();
+}
+
+void Emulator::run()
+{
+    Instruction instr = disassemble(mmu->getMemory(), cpu.getPC());
+    if (cpu.execute()) {
+        spdlog::trace("{:04x} {:<10} {:<6} {:<13} {}", instr.pc, instr.bytesToString(), instr.mnemonic, instr.operandsToString(), cpu.toString());
+        QTimer::singleShot(0, [this] { emit next(); });
+    } else {
+        spdlog::info("{:04x} {:<10} {:<6} {:<13}", instr.pc, instr.bytesToString(), instr.mnemonic, instr.operandsToString());
     }
-
-    std::vector<uint8_t> getVram() const
-    {
-        return mmu->getVram();
-    }
-
-public slots:
-    // Run CPU commands in a loop.
-    void run()
-    {
-        Instruction instr = disassemble(mmu->getMemory(), cpu.getPC());
-        if (cpu.execute()) {
-            spdlog::trace("{:04x} {:<10} {:<6} {:<13} {}", instr.pc, instr.bytesToString(), instr.mnemonic, instr.operandsToString(), cpu.toString());
-            QTimer::singleShot(0, [this] { emit next(); });
-        } else {
-            spdlog::info("{:04x} {:<10} {:<6} {:<13}", instr.pc, instr.bytesToString(), instr.mnemonic, instr.operandsToString());
-        }
-    }
-
-signals:
-    void next();
-
-private:
-    Cpu cpu;
-    std::shared_ptr<Mmu> mmu;
-};
+}
 
 class Gui : public QObject {
     Q_OBJECT
@@ -118,8 +104,12 @@ int runGui(int argc, char** argv)
 {
     QApplication app(argc, argv);
     auto romFilename = argv[1];
-    Emulator emu{ romFilename };
+    auto mmu = std::make_shared<Mmu>();
+    Cpu cpu{ mmu };
+    Emulator emu{ mmu, cpu, romFilename };
     Gui gui{ emu };
+    Debugger debugger{ emu, cpu };
+    debugger.show();
 
     QObject::connect(&emu, &Emulator::next, &emu, &Emulator::run);
     QObject::connect(&gui, &Gui::drawSignal, &gui, &Gui::drawSlot);
