@@ -4,15 +4,16 @@
 #include <QTimer>
 #include <fmt/format.h>
 
-Debugger::Debugger(const Emulator& emulator, QWidget* parent)
+Debugger::Debugger(const Emulator& emulator, Cpu& cpu, QWidget* parent)
     : QMainWindow(parent)
     , ui(new Ui::Debugger)
     , emulator(emulator)
+    , cpu(cpu)
 {
     ui->setupUi(this);
     QTimer* timer = new QTimer(this);
     connect(timer, SIGNAL(timeout()), this, SLOT(redraw()));
-    timer->start(1000 / 60.0);
+    timer->start(1000 / 60);
 }
 
 Debugger::~Debugger()
@@ -20,13 +21,17 @@ Debugger::~Debugger()
     delete ui;
 }
 
+void Debugger::setRegisterLabel(QLabel* label, uint16_t value)
+{
+    label->setText(QString::fromStdString(fmt::format("0x{:04X}", value)));
+}
+
 void Debugger::redraw()
 {
-    Registers reg = emulator.getRegisters();
-    ui->valueAF->setText(QString::fromStdString(fmt::format("0x{:04X}", reg.af)));
-    ui->valueBC->setText(QString::fromStdString(fmt::format("0x{:04X}", reg.bc)));
-    ui->valueDE->setText(QString::fromStdString(fmt::format("0x{:04X}", reg.de)));
-    ui->valueHL->setText(QString::fromStdString(fmt::format("0x{:04X}", reg.hl)));
-    ui->valueSP->setText(QString::fromStdString(fmt::format("0x{:04X}", reg.sp)));
-    ui->valuePC->setText(QString::fromStdString(fmt::format("0x{:04X}", reg.pc)));
+    setRegisterLabel(ui->valueAF, cpu.getAF());
+    setRegisterLabel(ui->valueBC, cpu.getBC());
+    setRegisterLabel(ui->valueDE, cpu.getDE());
+    setRegisterLabel(ui->valueHL, cpu.getHL());
+    setRegisterLabel(ui->valueSP, cpu.getSP());
+    setRegisterLabel(ui->valuePC, cpu.getPC());
 }

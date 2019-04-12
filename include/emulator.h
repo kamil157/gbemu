@@ -10,10 +10,9 @@ class Emulator : public QObject {
     Q_OBJECT
 
 public:
-    Emulator(const std::string& romFilename);
+    Emulator(const std::shared_ptr<Mmu>& mmu, Cpu& cpu, const std::string& romFilename);
 
     std::vector<uint8_t> getVram() const;
-    Registers getRegisters() const;
 
 public slots:
     // Run CPU commands in a loop.
@@ -23,7 +22,7 @@ signals:
     void next();
 
 private:
-    Cpu cpu;
+    Cpu& cpu;
     std::shared_ptr<Mmu> mmu;
 };
 

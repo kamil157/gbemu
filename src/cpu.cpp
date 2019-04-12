@@ -22,11 +22,6 @@ Cpu::Cpu(const std::shared_ptr<Mmu>& mmu)
 {
 }
 
-Registers Cpu::getRegisters() const
-{
-    return Registers{ getAF(), bc, de, hl, sp, pc };
-}
-
 uint16_t Cpu::getPC() const
 {
     return pc;
@@ -239,6 +234,11 @@ uint16_t Cpu::getAF() const
 {
     return static_cast<uint16_t>((a << 8) + static_cast<uint8_t>(f.to_ulong()));
 }
+
+uint16_t Cpu::getBC() const { return bc; }
+uint16_t Cpu::getDE() const { return de; }
+uint16_t Cpu::getHL() const { return hl; }
+uint16_t Cpu::getSP() const { return sp; }
 
 void Cpu::setAF(uint16_t nn)
 {

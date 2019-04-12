@@ -18,25 +18,19 @@
 
 #include <QObject>
 
-Emulator::Emulator(const std::string& romFilename)
-    : cpu(nullptr)
+Emulator::Emulator(const std::shared_ptr<Mmu>& mmu, Cpu& cpu, const std::string& romFilename)
+    : cpu(cpu)
+    , mmu(mmu)
 {
-    mmu = std::make_shared<Mmu>();
     auto bootstrapRom = readFile("../gbemu/res/bootstrap.bin");
     mmu->loadBootstrap(bootstrapRom);
     auto cartridgeRom = readFile(romFilename);
     mmu->loadCartridge(cartridgeRom);
-    cpu = Cpu{ mmu };
 }
 
 std::vector<uint8_t> Emulator::getVram() const
 {
     return mmu->getVram();
-}
-
-Registers Emulator::getRegisters() const
-{
-    return cpu.getRegisters();
 }
 
 void Emulator::run()
@@ -110,13 +104,14 @@ int runGui(int argc, char** argv)
 {
     QApplication app(argc, argv);
     auto romFilename = argv[1];
-    Emulator emu{ romFilename };
+    auto mmu = std::make_shared<Mmu>();
+    Cpu cpu{ mmu };
+    Emulator emu{ mmu, cpu, romFilename };
     Gui gui{ emu };
-    Debugger debugger{ emu };
+    Debugger debugger{ emu, cpu };
     debugger.show();
 
     QObject::connect(&emu, &Emulator::next, &emu, &Emulator::run);
-    //    QObject::connect(&emu, &Emulator::next, &debugger, &Debugger::redraw);
     QObject::connect(&gui, &Gui::drawSignal, &gui, &Gui::drawSlot);
     emu.run();
     gui.drawSlot();
