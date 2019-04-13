@@ -11,7 +11,7 @@ matrix:
 
   - os: linux
     env:
-    - MATRIX_EVAL="CXX='clang --gcc-toolchain=/usr/bin/g++-8'"
+    - MATRIX_EVAL="CXX='clang --gcc-toolchain=/usr'"
 
 addons:
   apt:
