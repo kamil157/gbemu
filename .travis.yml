@@ -1,4 +1,4 @@
-dist: trusty
+dist: xenial
 
 language: cpp
 
@@ -15,7 +15,6 @@ addons:
 
 script:
   - export CXX=g++-7
-  - gcc -v && g++ -v
   - cd ..
   - mkdir build
   - cd build
