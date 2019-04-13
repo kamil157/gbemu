@@ -2,6 +2,8 @@
 #include "ui_debugger.h"
 
 #include <QPushButton>
+#include <QShortcut>
+#include <QStyle>
 #include <QTimer>
 #include <fmt/format.h>
 
@@ -17,6 +19,8 @@ Debugger::Debugger(const Emulator& emulator, Cpu& cpu, QWidget* parent)
     timer->start(1000 / 60);
 
     ui->buttonPlayPause->setIcon(style()->standardIcon(QStyle::SP_MediaPause));
+    QShortcut* shortcut = new QShortcut(Qt::Key_F5, this);
+    QObject::connect(shortcut, &QShortcut::activated, this, &Debugger::playPauseClicked);
     QObject::connect(ui->buttonPlayPause, &QPushButton::clicked, this, &Debugger::playPauseClicked);
     QObject::connect(this, &Debugger::pauseClicked, &emulator, &Emulator::pause);
     QObject::connect(this, &Debugger::playClicked, &emulator, &Emulator::play);
