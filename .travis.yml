@@ -7,11 +7,11 @@ matrix:
   include:
   - os: linux
     env:
-    - CXX=g++-8
+    - MATRIX_EVAL="CXX=g++-8"
 
   - os: linux
     env:
-    - CXX=clang
+    - MATRIX_EVAL="CXX=clang --gcc-toolchain=/usr/bin/g++-8"
 
 addons:
   apt:
@@ -27,6 +27,7 @@ before_install:
   - sudo apt-get update -q
   - sudo apt-get install qt512base -y
   - source /opt/qt512/bin/qt512-env.sh
+  - eval "${MATRIX_EVAL}"
 
 script:
   - cd ..
