@@ -3,26 +3,33 @@ sudo: required
 
 language: cpp
 
-compiler:
-  - g++
+matrix:
+  include:
+  - os: linux
+    env:
+    - MATRIX_EVAL="CXX=g++-8"
+
+  - os: linux
+    env:
+    - MATRIX_EVAL="CXX='clang --gcc-toolchain=/usr'"
 
 addons:
   apt:
     sources:
-      - ubuntu-toolchain-r-test
+    - ubuntu-toolchain-r-test
     packages:
-      - g++-8
-      - build-essential 
-      - libgl1-mesa-dev
+    - g++-8
+    - build-essential
+    - libgl1-mesa-dev
 
 before_install:
   - sudo add-apt-repository ppa:beineri/opt-qt-5.12.2-xenial -y
   - sudo apt-get update -q
   - sudo apt-get install qt512base -y
   - source /opt/qt512/bin/qt512-env.sh
+  - eval "${MATRIX_EVAL}"
 
 script:
-  - export CXX=g++-8
   - cd ..
   - mkdir build
   - cd build
