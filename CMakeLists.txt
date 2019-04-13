@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.1.0)
 
 cmake_policy(SET CMP0028 NEW)
 cmake_policy(SET CMP0048 NEW)
@@ -34,7 +34,7 @@ add_library(core ${CORE_SOURCES} ${CORE_HEADERS})
 target_include_directories(core PRIVATE include)
 target_link_libraries(core utils spdlog)
 
-add_executable(emulator src/emulator.cpp src/debugger.cpp include/debugger.h include/emulator.h)
+add_executable(emulator src/debugger.ui src/emulator.cpp src/debugger.cpp include/debugger.h include/emulator.h)
 target_include_directories(emulator PRIVATE include)
 target_link_libraries(emulator core Qt5::Widgets)
 
