@@ -3,30 +3,24 @@ sudo: required
 
 language: cpp
 
-compiler:
-  - clang
-  - g++
-
 matrix:
   include:
   - os: linux
-    addons:
-      apt:
-        sources:
-        - ubuntu-toolchain-r-test
-        packages:
-        - g++-8
-        - build-essential 
-        - libgl1-mesa-dev
     env:
     - CXX=g++-8
 
   - os: linux
-    addons:
-      apt:
-        packages:
-        - build-essential 
-        - libgl1-mesa-dev
+    env:
+    - CXX=clang
+
+addons:
+  apt:
+    sources:
+    - ubuntu-toolchain-r-test
+    packages:
+    - g++-8
+    - build-essential
+    - libgl1-mesa-dev
 
 before_install:
   - sudo add-apt-repository ppa:beineri/opt-qt-5.12.2-xenial -y
