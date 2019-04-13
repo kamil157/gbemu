@@ -12,6 +12,7 @@ addons:
       - ubuntu-toolchain-r-test
     packages:
       - g++-8
+      - qtbase5-dev
 
 before_install:
   - sudo add-apt-repository ppa:beineri/opt-qt-5.12.2-xenial -y
