@@ -1,0 +1,23 @@
+dist: trusty
+
+language: cpp
+
+compiler:
+  - g++
+
+addons:
+apt:
+  sources:
+    - ubuntu-toolchain-r-test
+  packages:
+    - g++-7
+    - qtbase5-dev
+
+script:
+  - gcc -v && g++ -v && cmake --version
+  - cd ..
+  - mkdir build
+  - cd build
+  - cmake ../gbemu
+  - make -j8
+  - make test
