@@ -19,11 +19,16 @@ Debugger::Debugger(const Emulator& emulator, Cpu& cpu, QWidget* parent)
     timer->start(1000 / 60);
 
     ui->buttonPlayPause->setIcon(style()->standardIcon(QStyle::SP_MediaPause));
-    QShortcut* shortcut = new QShortcut(Qt::Key_F5, this);
-    QObject::connect(shortcut, &QShortcut::activated, this, &Debugger::playPauseClicked);
-    QObject::connect(ui->buttonPlayPause, &QPushButton::clicked, this, &Debugger::playPauseClicked);
+    QShortcut* shortcutPlayPause = new QShortcut(Qt::Key_F5, this);
+    QObject::connect(shortcutPlayPause, &QShortcut::activated, this, &Debugger::playPause);
+    QObject::connect(ui->buttonPlayPause, &QPushButton::clicked, this, &Debugger::playPause);
     QObject::connect(this, &Debugger::pauseClicked, &emulator, &Emulator::pause);
     QObject::connect(this, &Debugger::playClicked, &emulator, &Emulator::play);
+
+    ui->buttonStep->setIcon(style()->standardIcon(QStyle::SP_ArrowRight));
+    QShortcut* shortcutStep = new QShortcut(Qt::Key_F10, this);
+    QObject::connect(shortcutStep, &QShortcut::activated, &emulator, &Emulator::step);
+    QObject::connect(ui->buttonStep, &QPushButton::clicked, &emulator, &Emulator::step);
 }
 
 Debugger::~Debugger()
@@ -46,9 +51,10 @@ void Debugger::redraw()
     setRegisterLabel(ui->valuePC, cpu.getPC());
 }
 
-void Debugger::playPauseClicked()
+void Debugger::playPause()
 {
     paused = !paused;
+    ui->buttonStep->setEnabled(paused);
     if (paused) {
         ui->buttonPlayPause->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
         emit pauseClicked();

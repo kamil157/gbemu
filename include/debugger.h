@@ -16,11 +16,11 @@ class Debugger : public QMainWindow {
 
 public:
     explicit Debugger(const Emulator& emulator, Cpu& cpu, QWidget* parent = nullptr);
-    ~Debugger();
+    virtual ~Debugger();
 
 public slots:
     void redraw();
-    void playPauseClicked();
+    void playPause();
 
 private:
     Ui::Debugger* ui;
@@ -33,6 +33,7 @@ private:
 signals:
     void pauseClicked();
     void playClicked();
+    void stepClicked();
 };
 
 #endif // DEBUGGER_H

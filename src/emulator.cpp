@@ -26,6 +26,12 @@ Emulator::Emulator(const std::shared_ptr<Mmu>& mmu, Cpu& cpu, const std::string&
     mmu->loadBootstrap(bootstrapRom);
     auto cartridgeRom = readFile(romFilename);
     mmu->loadCartridge(cartridgeRom);
+    timer = new QTimer(this);
+}
+
+Emulator::~Emulator()
+{
+    delete timer;
 }
 
 std::vector<uint8_t> Emulator::getVram() const
@@ -33,26 +39,26 @@ std::vector<uint8_t> Emulator::getVram() const
     return mmu->getVram();
 }
 
-void Emulator::run()
+void Emulator::step()
 {
     Instruction instr = disassemble(mmu->getMemory(), cpu.getPC());
     if (cpu.execute()) {
         spdlog::trace("{:04x} {:<10} {:<6} {:<13} {}", instr.pc, instr.bytesToString(), instr.mnemonic, instr.operandsToString(), cpu.toString());
-        QTimer::singleShot(0, [this] { emit next(); });
     } else {
         spdlog::info("{:04x} {:<10} {:<6} {:<13}", instr.pc, instr.bytesToString(), instr.mnemonic, instr.operandsToString());
     }
 }
 
-void Emulator::pause()
-{
-    QObject::disconnect(this, &Emulator::next, this, &Emulator::run);
-}
-
 void Emulator::play()
 {
-    QObject::connect(this, &Emulator::next, this, &Emulator::run);
-    run();
+    QObject::connect(timer, &QTimer::timeout, this, &Emulator::step);
+    timer->start(0);
+}
+
+void Emulator::pause()
+{
+    QObject::disconnect(timer, &QTimer::timeout, this, &Emulator::step);
+    timer->stop();
 }
 
 class Gui : public QObject {
@@ -65,11 +71,21 @@ public:
         QImage image(256, 512, QImage::Format_RGB32);
         label.setPixmap(QPixmap::fromImage(image));
         label.show();
+
+        // Draw contents of VRAM in 60 FPS.
+        timer = new QTimer(this);
+        QObject::connect(timer, &QTimer::timeout, this, &Gui::redraw);
+        timer->start(1000 / 60);
+    }
+
+    virtual ~Gui()
+    {
+        delete timer;
     }
 
 public slots:
-    // Draw contents of VRAM in 60 FPS.
-    void drawSlot()
+
+    void redraw()
     {
         static const auto linesPerTile = 8;
         static const auto pixelsPerLine = 8;
@@ -100,15 +116,12 @@ public slots:
         }
         QPixmap pixmap = QPixmap::fromImage(image.scaled(256, 512));
         label.setPixmap(pixmap);
-        QTimer::singleShot(1000 / 60.0, [this] { emit drawSignal(); });
     }
-
-signals:
-    void drawSignal();
 
 private:
     QLabel label;
     const Emulator& emulator;
+    QTimer* timer;
 };
 
 int runGui(int argc, char** argv)
@@ -121,11 +134,7 @@ int runGui(int argc, char** argv)
     Gui gui{ emu };
     Debugger debugger{ emu, cpu };
     debugger.show();
-
     emu.play();
-    QObject::connect(&gui, &Gui::drawSignal, &gui, &Gui::drawSlot);
-    gui.drawSlot();
-
     return app.exec();
 }
 

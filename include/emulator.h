@@ -5,28 +5,30 @@
 #include "mmu.h"
 
 #include <QObject>
+#include <QTimer>
 
 class Emulator : public QObject {
     Q_OBJECT
 
 public:
     Emulator(const std::shared_ptr<Mmu>& mmu, Cpu& cpu, const std::string& romFilename);
-
+    virtual ~Emulator();
     std::vector<uint8_t> getVram() const;
 
 public slots:
-    // Run CPU commands in a loop.
-    void run();
+    // Execute a single CPU instruction.
+    void step();
 
-    void pause();
+    // Execute CPU instructions in a loop.
     void play();
 
-signals:
-    void next();
+    // Pause execution.
+    void pause();
 
 private:
     Cpu& cpu;
     std::shared_ptr<Mmu> mmu;
+    QTimer* timer;
 };
 
 #endif // EMULATOR_H

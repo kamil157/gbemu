@@ -120,7 +120,23 @@
      </rect>
     </property>
     <property name="text">
-     <string>...</string>
+     <string>PlayPause</string>
+    </property>
+   </widget>
+   <widget class="QToolButton" name="buttonStep">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>120</x>
+      <y>10</y>
+      <width>26</width>
+      <height>24</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Step</string>
     </property>
    </widget>
   </widget>
