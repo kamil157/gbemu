@@ -4,7 +4,6 @@
 #include "mmu.h"
 #include "utils.h"
 
-#include <bitset>
 #include <cstdint>
 #include <memory>
 #include <ostream>
@@ -33,9 +32,17 @@ public:
     // Set value of AF register to nn.
     void setAF(uint16_t nn);
 
+    // Get flag value from F register.
+    bool getFlag(uint8_t flag);
+
 private:
-    uint8_t a = 0; // Accumulator
-    std::bitset<8> f; // Status flags
+    union {
+        struct {
+            uint8_t f; // Status flags
+            uint8_t a; // Accumulator
+        };
+        uint16_t af;
+    };
 
     // General purpose registers
     union {

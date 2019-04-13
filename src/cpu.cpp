@@ -9,28 +9,23 @@
 
 using json = nlohmann::json;
 
-const uint8_t flagZ = 7;
-const uint8_t flagN = 6;
-const uint8_t flagH = 5;
-const uint8_t flagC = 4;
+const uint8_t flagZ = 1 << 7;
+const uint8_t flagN = 1 << 6;
+const uint8_t flagH = 1 << 5;
+const uint8_t flagC = 1 << 4;
 
 Cpu::Cpu(const std::shared_ptr<Mmu>& mmu)
-    : bc(0)
+    : af(0)
+    , bc(0)
     , de(0)
     , hl(0)
     , mmu(mmu)
 {
 }
 
-uint16_t Cpu::getPC() const
-{
-    return pc;
-}
-
 std::string Cpu::toString() const
 {
-    std::string flags = f.to_string().substr(0, 4);
-    return fmt::format("a={:02x} f={} bc={:04x} de={:04x} hl={:04x} sp={:04x} pc={:04x} ", a, flags, bc, de, hl, sp, pc);
+    return fmt::format("a={:02x} f={} bc={:04x} de={:04x} hl={:04x} sp={:04x} pc={:04x} ", a, f >> 4, bc, de, hl, sp, pc);
 }
 
 std::ostream& operator<<(std::ostream& os, Cpu const& cpu)
@@ -40,7 +35,12 @@ std::ostream& operator<<(std::ostream& os, Cpu const& cpu)
 
 void Cpu::setFlag(uint8_t flag, bool b)
 {
-    b ? f.set(flag) : f.reset(flag);
+    b ? f |= flag : f &= ~flag;
+}
+
+bool Cpu::getFlag(uint8_t flag)
+{
+    return f & flag;
 }
 
 void Cpu::setFlagsFromJson(json opcode)
@@ -74,7 +74,7 @@ void Cpu::setFlagsFromJson(json opcode)
 
 void Cpu::rotateLeft(uint8_t& reg)
 {
-    bool oldFlagC = f[flagC];
+    bool oldFlagC = getFlag(flagC);
     setFlag(flagC, reg >> 7);
     reg <<= 1;
     reg += oldFlagC;
@@ -90,7 +90,7 @@ void Cpu::shiftRight(uint8_t& reg)
 
 void Cpu::rotateRight(uint8_t& reg)
 {
-    bool oldFlagC = f[flagC];
+    bool oldFlagC = getFlag(flagC);
     setFlag(flagC, reg & 0x1);
     reg >>= 1;
     reg += oldFlagC << 7;
@@ -222,7 +222,7 @@ void Cpu::addHL(uint16_t nn)
 
 void Cpu::adc(uint8_t n)
 {
-    add(n + f[flagC]);
+    add(n + getFlag(flagC));
 }
 
 void disableInterrupts()
@@ -230,22 +230,14 @@ void disableInterrupts()
     spdlog::warn("DI is unimplemented.");
 }
 
-uint16_t Cpu::getAF() const
-{
-    return static_cast<uint16_t>((a << 8) + static_cast<uint8_t>(f.to_ulong()));
-}
-
+uint16_t Cpu::getAF() const { return af; }
 uint16_t Cpu::getBC() const { return bc; }
 uint16_t Cpu::getDE() const { return de; }
 uint16_t Cpu::getHL() const { return hl; }
 uint16_t Cpu::getSP() const { return sp; }
+uint16_t Cpu::getPC() const { return pc; }
 
-void Cpu::setAF(uint16_t nn)
-{
-    a = nn >> 8;
-    f.reset();
-    f |= nn & 0xff;
-}
+void Cpu::setAF(uint16_t nn) { af = nn; }
 
 bool Cpu::execute()
 {
@@ -287,26 +279,26 @@ bool Cpu::execute()
     case 0x1D: dec(e);                                                             break; // DEC E
     case 0x1E: e = read();                                                         break; // LD E,n
     case 0x1F: rotateRight(a);                                                     break; // RRA
-    case 0x20: relativeJump(f[flagZ] == 0);                                        break; // JR NZ,n
+    case 0x20: relativeJump(getFlag(flagZ) == 0);                                  break; // JR NZ,n
     case 0x21: hl = read16();                                                      break; // LD HL,nn
     case 0x22: mmu->set(hl++, a);                                                  break; // LD (HL+),A
     case 0x23: ++hl;                                                               break; // INC HL
     case 0x24: inc(h);                                                             break; // INC H
     case 0x25: dec(h);                                                             break; // DEC H
     case 0x26: h = read();                                                         break; // LD H,n
-    case 0x28: relativeJump(f[flagZ] == 1);                                        break; // JR Z,n
+    case 0x28: relativeJump(getFlag(flagZ) == 1);                                  break; // JR Z,n
     case 0x2A: a = mmu->get(hl++);                                                 break; // LD A,(HL+)
     case 0x2C: inc(l);                                                             break; // INC L
     case 0x2D: dec(l);                                                             break; // DEC L
     case 0x2E: l = read();                                                         break; // LD L,n
     case 0x29: addHL(hl);                                                          break; // ADD HL,HL
-    case 0x30: relativeJump(f[flagC] == 0);                                        break; // JR NC,n
+    case 0x30: relativeJump(getFlag(flagC) == 0);                                  break; // JR NC,n
     case 0x31: sp = read16();                                                      break; // LD SP,nn
     case 0x32: mmu->set(hl--, a);                                                  break; // LDD (HL),A
     case 0x33: ++sp;                                                               break; // INC SP
     case 0x35: { auto n = mmu->get(hl); dec(n); mmu->set(hl, n); }                 break; // DEC (HL)
     case 0x36: mmu->set(hl, read());                                               break; // LD (HL),n
-    case 0x38: relativeJump(f[flagC] == 1);                                        break; // JR C,n
+    case 0x38: relativeJump(getFlag(flagC) == 1);                                  break; // JR C,n
     case 0x3A: a = mmu->get(hl--);                                                 break; // LD A,(HL-)
     case 0x3C: inc(a);                                                             break; // INC A
     case 0x3D: dec(a);                                                             break; // DEC A
@@ -393,25 +385,25 @@ bool Cpu::execute()
     case 0xB6: orA(mmu->get(hl));                                                  break; // OR (HL)
     case 0xB7: orA(a);                                                             break; // OR A
     case 0xBE: cp(mmu->get(hl));                                                   break; // CP (HL)
-    case 0xC0: ret(f[flagZ] == 0);                                                 break; // RET NZ
+    case 0xC0: ret(getFlag(flagZ) == 0);                                           break; // RET NZ
     case 0xC1: bc = pop();                                                         break; // POP BC
     case 0xC3: pc = read16();                                                      break; // JP nn
-    case 0xC4: call(f[flagZ] == 0);                                                break; // CALL NZ,nn
+    case 0xC4: call(getFlag(flagZ) == 0);                                          break; // CALL NZ,nn
     case 0xC6: add(read());                                                        break; // ADD A,n
-    case 0xC8: ret(f[flagZ] == 1);                                                 break; // RET Z
+    case 0xC8: ret(getFlag(flagZ) == 1);                                           break; // RET Z
     case 0xC9: ret(true);                                                          break; // RET
     case 0xC5: push(bc);                                                           break; // PUSH BC
     case 0xCB: success = executeExtended();                                        break;
-    case 0xCC: call(f[flagZ] == 1);                                                break; // CALL Z,nn
+    case 0xCC: call(getFlag(flagZ) == 1);                                          break; // CALL Z,nn
     case 0xCD: call(true);                                                         break; // CALL nn
     case 0xCE: adc(read());                                                        break; // ADC A,n
-    case 0xD0: ret(f[flagC] == 0);                                                 break; // RET NC
+    case 0xD0: ret(getFlag(flagC) == 0);                                           break; // RET NC
     case 0xD1: de = pop();                                                         break; // POP DE
-    case 0xD4: call(f[flagC] == 0);                                                break; // CALL NC,nn
+    case 0xD4: call(getFlag(flagC) == 0);                                          break; // CALL NC,nn
     case 0xD5: push(de);                                                           break; // PUSH DE
     case 0xD6: sub(read());                                                        break; // SUB N
-    case 0xD8: ret(f[flagC] == 1);                                                 break; // RET C
-    case 0xDC: call(f[flagC] == 1);                                                break; // CALL C,nn
+    case 0xD8: ret(getFlag(flagC) == 1);                                           break; // RET C
+    case 0xDC: call(getFlag(flagC) == 1);                                          break; // CALL C,nn
     case 0xE0: mmu->set(0xFF00 + read(), a);                                       break; // LDH ($FF00+n),A
     case 0xE1: hl = pop();                                                         break; // POP HL
     case 0xE2: mmu->set(0xFF00 + c, a);                                            break; // LD ($FF00+C),A
