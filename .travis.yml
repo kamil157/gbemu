@@ -14,6 +14,7 @@ addons:
       - qtbase5-dev
 
 script:
+  - export CXX=g++-7
   - gcc -v && g++ -v
   - cd ..
   - mkdir build
