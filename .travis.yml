@@ -9,6 +9,7 @@ addons:
   apt:
     sources:
       - ubuntu-toolchain-r-test
+      - ppa:beineri/opt-qt-5.11.0-xenial
     packages:
       - g++-7
       - qtbase5-dev
