@@ -44,6 +44,17 @@ void Emulator::run()
     }
 }
 
+void Emulator::pause()
+{
+    QObject::disconnect(this, &Emulator::next, this, &Emulator::run);
+}
+
+void Emulator::play()
+{
+    QObject::connect(this, &Emulator::next, this, &Emulator::run);
+    run();
+}
+
 class Gui : public QObject {
     Q_OBJECT
 
@@ -111,9 +122,8 @@ int runGui(int argc, char** argv)
     Debugger debugger{ emu, cpu };
     debugger.show();
 
-    QObject::connect(&emu, &Emulator::next, &emu, &Emulator::run);
+    emu.play();
     QObject::connect(&gui, &Gui::drawSignal, &gui, &Gui::drawSlot);
-    emu.run();
     gui.drawSlot();
 
     return app.exec();

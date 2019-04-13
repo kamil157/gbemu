@@ -5,6 +5,7 @@
 
 #include <QLabel>
 #include <QMainWindow>
+#include <QObject>
 
 namespace Ui {
 class Debugger;
@@ -19,13 +20,19 @@ public:
 
 public slots:
     void redraw();
+    void playPauseClicked();
 
 private:
     Ui::Debugger* ui;
     const Emulator& emulator;
     Cpu& cpu;
+    bool paused = false;
 
     void setRegisterLabel(QLabel* label, uint16_t value);
+
+signals:
+    void pauseClicked();
+    void playClicked();
 };
 
 #endif // DEBUGGER_H

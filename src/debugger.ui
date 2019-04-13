@@ -14,11 +14,11 @@
    <string>Debugger</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QWidget" name="">
+   <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
-      <x>40</x>
-      <y>30</y>
+      <x>10</x>
+      <y>10</y>
       <width>76</width>
       <height>134</height>
      </rect>
@@ -73,13 +73,6 @@
        </property>
       </widget>
      </item>
-     <item row="3" column="1">
-      <widget class="QLabel" name="valueHL">
-       <property name="text">
-        <string>0x0000</string>
-       </property>
-      </widget>
-     </item>
      <item row="4" column="0">
       <widget class="QLabel" name="label_9">
        <property name="text">
@@ -108,7 +101,27 @@
        </property>
       </widget>
      </item>
+     <item row="3" column="1">
+      <widget class="QLabel" name="valueHL">
+       <property name="text">
+        <string>0x0000</string>
+       </property>
+      </widget>
+     </item>
     </layout>
+   </widget>
+   <widget class="QToolButton" name="buttonPlayPause">
+    <property name="geometry">
+     <rect>
+      <x>90</x>
+      <y>10</y>
+      <width>26</width>
+      <height>24</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>...</string>
+    </property>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">

@@ -18,6 +18,9 @@ public slots:
     // Run CPU commands in a loop.
     void run();
 
+    void pause();
+    void play();
+
 signals:
     void next();
 
