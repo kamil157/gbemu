@@ -17,6 +17,8 @@ find_package(Qt5Widgets CONFIG REQUIRED)
 add_subdirectory(lib/fmt EXCLUDE_FROM_ALL)
 add_subdirectory(lib/spdlog EXCLUDE_FROM_ALL)
 
+link_libraries(-lstdc++ -lm) # for Clang support
+
 add_library(nlohmann_json INTERFACE)
 target_include_directories(nlohmann_json INTERFACE lib/nlohmann_json)
 
