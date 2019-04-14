@@ -26,20 +26,14 @@ Debugger::Debugger(const Emulator& emulator, Cpu& cpu, QWidget* parent)
     ui->buttonPlayPause->setIcon(style()->standardIcon(QStyle::SP_MediaPause));
     QShortcut* shortcutPlayPause = new QShortcut(Qt::Key_F5, this);
     QObject::connect(shortcutPlayPause, &QShortcut::activated, this, &Debugger::on_buttonPlayPause_clicked);
-    QObject::connect(this, &Debugger::pauseClicked, &emulator, &Emulator::pause);
-    QObject::connect(this, &Debugger::playClicked, &emulator, &Emulator::play);
 
     ui->buttonStep->setIcon(style()->standardIcon(QStyle::SP_ArrowRight));
     QShortcut* shortcutStep = new QShortcut(Qt::Key_F10, this);
-    QObject::connect(shortcutStep, &QShortcut::activated, &emulator, &Emulator::executeInstruction);
-    QObject::connect(ui->buttonStep, &QPushButton::clicked, &emulator, &Emulator::executeInstruction);
+    QObject::connect(shortcutStep, &QShortcut::activated, this, &Debugger::on_buttonStep_clicked);
 
     QRegExp regex("[0-9a-fA-F]{0,4}");
     QValidator* validator = new QRegExpValidator(regex, this);
     ui->textBreakpointPC->setValidator(validator);
-    QObject::connect(this, &Debugger::breakpointSet, &emulator, &Emulator::breakpointSet);
-    QObject::connect(this, &Debugger::breakpointUnset, &emulator, &Emulator::breakpointUnset);
-    QObject::connect(&emulator, &Emulator::executionPaused, this, &Debugger::onExecutionPaused);
 
     QTimer* timer = new QTimer(this);
     QObject::connect(timer, &QTimer::timeout, this, &Debugger::redraw);
@@ -95,6 +89,11 @@ void Debugger::on_textBreakpointPC_returnPressed()
     } else {
         emit breakpointUnset();
     }
+}
+
+void Debugger::on_buttonStep_clicked()
+{
+    emit stepClicked();
 }
 
 void Debugger::onExecutionPaused()

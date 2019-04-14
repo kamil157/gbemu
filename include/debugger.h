@@ -28,6 +28,9 @@ public slots:
     // Play or pause execution.
     void on_buttonPlayPause_clicked();
 
+    // Execute one instruction.
+    void on_buttonStep_clicked();
+
     // Set or unset breakpoint at PC.
     void on_textBreakpointPC_returnPressed();
 

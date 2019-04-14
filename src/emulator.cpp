@@ -103,12 +103,20 @@ int runGui(int argc, char** argv)
     auto romFilename = argv[1];
     auto mmu = std::make_shared<Mmu>();
     Cpu cpu{ mmu };
-    Emulator emu{ mmu, cpu, romFilename };
-    Gui gui{ emu };
-    Debugger debugger{ emu, cpu, &gui };
+    Emulator emulator{ mmu, cpu, romFilename };
+    Gui gui{ emulator };
+    Debugger debugger{ emulator, cpu, &gui };
+
+    QObject::connect(&debugger, &Debugger::pauseClicked, &emulator, &Emulator::pause);
+    QObject::connect(&debugger, &Debugger::playClicked, &emulator, &Emulator::play);
+    QObject::connect(&debugger, &Debugger::stepClicked, &emulator, &Emulator::executeInstruction);
+    QObject::connect(&debugger, &Debugger::breakpointSet, &emulator, &Emulator::breakpointSet);
+    QObject::connect(&debugger, &Debugger::breakpointUnset, &emulator, &Emulator::breakpointUnset);
+    QObject::connect(&emulator, &Emulator::executionPaused, &debugger, &Debugger::onExecutionPaused);
+
     debugger.show();
     gui.show();
-    emu.startLoop();
+    emulator.startLoop();
     return app.exec();
 }
 
