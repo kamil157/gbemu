@@ -44,7 +44,7 @@ std::shared_ptr<Mmu> Emulator::getMmu() const
     return mmu;
 }
 
-void Emulator::step()
+void Emulator::executeInstruction()
 {
     Instruction instr = disassemble(mmu->getMemory(), cpu.getPC());
     if (cpu.execute()) {
@@ -54,7 +54,25 @@ void Emulator::step()
     }
 }
 
+void Emulator::step()
+{
+    if (cpu.getPC() == breakpoint) {
+        pause();
+        emit executionPaused();
+        return;
+    }
+
+    executeInstruction();
+}
+
 void Emulator::play()
+{
+    spdlog::info("Resuming execution.");
+    executeInstruction();
+    startLoop();
+}
+
+void Emulator::startLoop()
 {
     QObject::connect(timer, &QTimer::timeout, this, &Emulator::step);
     timer->start(0);
@@ -62,8 +80,21 @@ void Emulator::play()
 
 void Emulator::pause()
 {
+    spdlog::info("Execution paused.");
     QObject::disconnect(timer, &QTimer::timeout, this, &Emulator::step);
     timer->stop();
+}
+
+void Emulator::breakpointSet(uint16_t pc)
+{
+    spdlog::info("Set breakpoint at pc=0x{:04x}.", pc);
+    breakpoint = pc;
+}
+
+void Emulator::breakpointUnset()
+{
+    spdlog::info("Unset breakpoint.");
+    breakpoint = {};
 }
 
 int runGui(int argc, char** argv)
@@ -77,7 +108,7 @@ int runGui(int argc, char** argv)
     Debugger debugger{ emu, cpu, &gui };
     debugger.show();
     gui.show();
-    emu.play();
+    emu.startLoop();
     return app.exec();
 }
 

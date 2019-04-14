@@ -165,6 +165,19 @@
      <string>Instruction</string>
     </property>
    </widget>
+   <widget class="QLineEdit" name="textBreakpointPC">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>200</y>
+      <width>71</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>0100</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">

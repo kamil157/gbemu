@@ -22,7 +22,14 @@ public slots:
     // Redraw debugger window.
     void redraw();
 
+    // Execution was paused from an external source.
+    void onExecutionPaused();
+
+    // Play or pause execution.
     void on_buttonPlayPause_clicked();
+
+    // Set or unset breakpoint at PC.
+    void on_textBreakpointPC_returnPressed();
 
 private:
     Ui::Debugger* ui;
@@ -38,6 +45,8 @@ signals:
     void pauseClicked();
     void playClicked();
     void stepClicked();
+    void breakpointSet(uint16_t pc);
+    void breakpointUnset();
 };
 
 #endif // DEBUGGER_H

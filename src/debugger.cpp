@@ -1,9 +1,13 @@
 #include "debugger.h"
 #include "ui_debugger.h"
 
+#include <QLineEdit>
 #include <QPushButton>
+#include <QRegExp>
+#include <QRegExpValidator>
 #include <QSettings>
 #include <QShortcut>
+#include <QString>
 #include <QStyle>
 #include <QTimer>
 
@@ -27,8 +31,15 @@ Debugger::Debugger(const Emulator& emulator, Cpu& cpu, QWidget* parent)
 
     ui->buttonStep->setIcon(style()->standardIcon(QStyle::SP_ArrowRight));
     QShortcut* shortcutStep = new QShortcut(Qt::Key_F10, this);
-    QObject::connect(shortcutStep, &QShortcut::activated, &emulator, &Emulator::step);
-    QObject::connect(ui->buttonStep, &QPushButton::clicked, &emulator, &Emulator::step);
+    QObject::connect(shortcutStep, &QShortcut::activated, &emulator, &Emulator::executeInstruction);
+    QObject::connect(ui->buttonStep, &QPushButton::clicked, &emulator, &Emulator::executeInstruction);
+
+    QRegExp regex("[0-9a-fA-F]{0,4}");
+    QValidator* validator = new QRegExpValidator(regex, this);
+    ui->textBreakpointPC->setValidator(validator);
+    QObject::connect(this, &Debugger::breakpointSet, &emulator, &Emulator::breakpointSet);
+    QObject::connect(this, &Debugger::breakpointUnset, &emulator, &Emulator::breakpointUnset);
+    QObject::connect(&emulator, &Emulator::executionPaused, this, &Debugger::onExecutionPaused);
 
     QTimer* timer = new QTimer(this);
     QObject::connect(timer, &QTimer::timeout, this, &Debugger::redraw);
@@ -71,6 +82,26 @@ void Debugger::on_buttonPlayPause_clicked()
         ui->buttonPlayPause->setIcon(style()->standardIcon(QStyle::SP_MediaPause));
         emit playClicked();
     }
+}
+
+void Debugger::on_textBreakpointPC_returnPressed()
+{
+
+    auto text = ui->textBreakpointPC->text();
+    bool ok;
+    auto pc = static_cast<uint16_t>(text.toInt(&ok, 16));
+    if (ok) {
+        emit breakpointSet(pc);
+    } else {
+        emit breakpointUnset();
+    }
+}
+
+void Debugger::onExecutionPaused()
+{
+    paused = true;
+    ui->buttonStep->setEnabled(paused);
+    ui->buttonPlayPause->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
 }
 
 void Debugger::closeEvent(QCloseEvent* event)

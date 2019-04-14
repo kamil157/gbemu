@@ -4,6 +4,8 @@
 #include "cpu.h"
 #include "mmu.h"
 
+#include <optional>
+
 #include <QObject>
 #include <QTimer>
 
@@ -16,9 +18,12 @@ public:
     std::vector<uint8_t> getVram() const;
     std::shared_ptr<Mmu> getMmu() const;
 
+    // Start execution.
+    void startLoop();
+
 public slots:
     // Execute a single CPU instruction.
-    void step();
+    void executeInstruction();
 
     // Execute CPU instructions in a loop.
     void play();
@@ -26,10 +31,22 @@ public slots:
     // Pause execution.
     void pause();
 
+    // Set breakpoint at PC.
+    void breakpointSet(uint16_t pc);
+
+    // Unset current breakpoint.
+    void breakpointUnset();
+
+signals:
+    void executionPaused();
+
 private:
     Cpu& cpu;
     std::shared_ptr<Mmu> mmu;
     QTimer* timer;
+    std::optional<uint16_t> breakpoint;
+
+    void step();
 };
 
 #endif // EMULATOR_H
