@@ -39,6 +39,11 @@ std::vector<uint8_t> Emulator::getVram() const
     return mmu->getVram();
 }
 
+std::shared_ptr<Mmu> Emulator::getMmu() const
+{
+    return mmu;
+}
+
 void Emulator::step()
 {
     Instruction instr = disassemble(mmu->getMemory(), cpu.getPC());

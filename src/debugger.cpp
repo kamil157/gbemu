@@ -51,6 +51,13 @@ void Debugger::redraw()
     setRegisterLabel(ui->valueHL, cpu.getHL());
     setRegisterLabel(ui->valueSP, cpu.getSP());
     setRegisterLabel(ui->valuePC, cpu.getPC());
+
+    Instruction instr = disassemble(emulator.getMmu()->getMemory(), cpu.getPC());
+    auto nextInstructionStr = fmt::format("{} {}", instr.mnemonic, instr.operandsToString());
+    ui->labelInstruction->setText(QString::fromStdString(nextInstructionStr));
+
+    auto nextBytesStr = fmt::format("{}", instr.bytesToString());
+    ui->labelBytes->setText(QString::fromStdString(nextBytesStr));
 }
 
 void Debugger::on_buttonPlayPause_clicked()

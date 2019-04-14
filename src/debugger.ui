@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>162</width>
-    <height>237</height>
+    <width>170</width>
+    <height>271</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -139,13 +139,39 @@
      <string>Step</string>
     </property>
    </widget>
+   <widget class="QLabel" name="labelInstruction">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>160</y>
+      <width>151</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Instruction</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="labelBytes">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>180</y>
+      <width>151</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Instruction</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>162</width>
+     <width>170</width>
      <height>22</height>
     </rect>
    </property>

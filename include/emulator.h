@@ -14,6 +14,7 @@ public:
     Emulator(const std::shared_ptr<Mmu>& mmu, Cpu& cpu, const std::string& romFilename);
     virtual ~Emulator();
     std::vector<uint8_t> getVram() const;
+    std::shared_ptr<Mmu> getMmu() const;
 
 public slots:
     // Execute a single CPU instruction.
