@@ -36,7 +36,7 @@ add_library(core ${CORE_SOURCES} ${CORE_HEADERS})
 target_include_directories(core PRIVATE include)
 target_link_libraries(core utils spdlog)
 
-add_executable(emulator src/debugger.ui src/emulator.cpp src/debugger.cpp include/debugger.h include/emulator.h)
+add_executable(emulator src/debugger.ui src/emulator.cpp src/debugger.cpp include/debugger.h include/emulator.h src/gui.cpp src/gui.ui include/gui.h)
 target_include_directories(emulator PRIVATE include)
 target_link_libraries(emulator core Qt5::Widgets)
 

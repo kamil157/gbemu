@@ -16,19 +16,23 @@ class Debugger : public QMainWindow {
 
 public:
     explicit Debugger(const Emulator& emulator, Cpu& cpu, QWidget* parent = nullptr);
-    virtual ~Debugger();
+    virtual ~Debugger() override;
 
 public slots:
+    // Redraw debugger window.
     void redraw();
-    void playPause();
+
+    void on_buttonPlayPause_clicked();
 
 private:
     Ui::Debugger* ui;
     const Emulator& emulator;
     Cpu& cpu;
+
+    // Is debugger paused.
     bool paused = false;
 
-    void setRegisterLabel(QLabel* label, uint16_t value);
+    void closeEvent(QCloseEvent* event) override;
 
 signals:
     void pauseClicked();
