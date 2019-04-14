@@ -19,8 +19,8 @@
      <rect>
       <x>10</x>
       <y>10</y>
-      <width>76</width>
-      <height>134</height>
+      <width>81</width>
+      <height>141</height>
      </rect>
     </property>
     <layout class="QFormLayout" name="formLayout">
@@ -113,7 +113,7 @@
    <widget class="QToolButton" name="buttonPlayPause">
     <property name="geometry">
      <rect>
-      <x>90</x>
+      <x>100</x>
       <y>10</y>
       <width>26</width>
       <height>24</height>
@@ -129,7 +129,7 @@
     </property>
     <property name="geometry">
      <rect>
-      <x>120</x>
+      <x>130</x>
       <y>10</y>
       <width>26</width>
       <height>24</height>
