@@ -116,14 +116,13 @@ int runGui(int argc, char** argv)
 
     debugger.show();
     gui.show();
-    emulator.startLoop();
     return app.exec();
 }
 
 int main(int argc, char** argv)
 {
     try {
-        spdlog::set_level(spdlog::level::debug);
+        spdlog::set_level(spdlog::level::trace);
         spdlog::set_pattern("[%H:%M:%S] %v");
         if (argc < 2) {
             throw std::runtime_error("Please provide rom name.");

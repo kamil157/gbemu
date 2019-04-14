@@ -25,7 +25,7 @@ Cpu::Cpu(const std::shared_ptr<Mmu>& mmu)
 
 std::string Cpu::toString() const
 {
-    return fmt::format("a={:02x} f={} bc={:04x} de={:04x} hl={:04x} sp={:04x} pc={:04x} ", a, f >> 4, bc, de, hl, sp, pc);
+    return fmt::format("a={:02x} f={:04b} bc={:04x} de={:04x} hl={:04x} sp={:04x} pc={:04x} ", a, f >> 4, bc, de, hl, sp, pc);
 }
 
 std::ostream& operator<<(std::ostream& os, Cpu const& cpu)
@@ -107,7 +107,7 @@ bool Cpu::executeExtended()
     case 0x1A: rotateRight(d);                                                     break; // RR D
     case 0x3F: shiftRight(a);                                                      break; // SRL A
     case 0x38: shiftRight(b);                                                      break; // SRL B
-    case 0x7C: setFlag(flagZ, isBitSet(7, h));                                     break; // BIT 7,H
+    case 0x7C: setFlag(flagZ, !isBitSet(7, h));                                    break; // BIT 7,H
     // clang-format on
     default:
         spdlog::error("Unimplemented opcode: CB {:02X}", opcode);
@@ -168,8 +168,8 @@ void Cpu::ret(bool condition)
 
 void Cpu::dec(uint8_t& reg)
 {
+    setFlag(flagH, isHalfCarrySubtraction(static_cast<int8_t>(reg), 1));
     --reg;
-    setFlag(flagH, isHalfCarrySubtraction(static_cast<int8_t>(reg), -1));
     setFlag(flagZ, reg == 0);
 }
 

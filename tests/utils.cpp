@@ -4,9 +4,9 @@
 
 TEST_CASE("Bits are numbered from right to left, from 0 to 7", "[utils]")
 {
-    REQUIRE(isBitSet(0b00000001, 0));
-    REQUIRE(isBitSet(0b10000000, 7));
-    REQUIRE(!isBitSet(0b10000000, 0));
+    REQUIRE(isBitSet(0, 0b00000001));
+    REQUIRE(isBitSet(7, 0b10000000));
+    REQUIRE(!isBitSet(0, 0b10000000));
 }
 
 TEST_CASE("Bytes are concatenated as little endian", "[utils]")

@@ -40,7 +40,7 @@ private:
     Cpu& cpu;
 
     // Is debugger paused.
-    bool paused = false;
+    bool paused = true;
 
     void closeEvent(QCloseEvent* event) override;
 

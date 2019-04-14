@@ -57,7 +57,7 @@ bool isHalfCarryAddition16(uint16_t n, uint16_t m)
     return ((n & 0xfff) + (m & 0xfff)) > 0xfff;
 }
 
-bool isBitSet(uint8_t byte, uint8_t n)
+bool isBitSet(uint8_t n, uint8_t byte)
 {
     return (byte >> n) & 1;
 }

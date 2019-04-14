@@ -21,7 +21,7 @@ bool isHalfCarrySubtraction(int8_t n, int8_t m);
 bool isHalfCarryAddition16(uint16_t n, uint16_t m);
 
 // Test if bit n of byte is set.
-bool isBitSet(uint8_t byte, uint8_t n);
+bool isBitSet(uint8_t n, uint8_t byte);
 
 // Concatenate 2 bytes into 16 bit int.
 uint16_t concatBytes(uint8_t lo, uint8_t hi);
