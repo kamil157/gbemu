@@ -33,13 +33,24 @@ std::ostream& operator<<(std::ostream& os, Cpu const& cpu)
     return os << cpu.toString();
 }
 
+bool isFlag(uint8_t flag)
+{
+    return flag == flagZ || flag == flagN || flag == flagH || flag == flagC;
+}
+
 void Cpu::setFlag(uint8_t flag, bool b)
 {
+    if (!isFlag(flag)) {
+        throw std::invalid_argument(fmt::format("{:02x} is not a flag value."));
+    }
     b ? f |= flag : f &= ~flag;
 }
 
 bool Cpu::getFlag(uint8_t flag)
 {
+    if (!isFlag(flag)) {
+        throw std::invalid_argument(fmt::format("{:02x} is not a flag value."));
+    }
     return f & flag;
 }
 
@@ -175,8 +186,8 @@ void Cpu::dec(uint8_t& reg)
 
 void Cpu::inc(uint8_t& reg)
 {
-    ++reg;
     setFlag(flagH, isHalfCarryAddition(reg, 1));
+    ++reg;
     setFlag(flagZ, reg == 0);
 }
 
