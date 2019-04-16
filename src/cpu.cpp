@@ -57,30 +57,19 @@ bool Cpu::getFlag(uint8_t flag)
 void Cpu::setFlagsFromJson(json opcode)
 {
     auto flags = opcode.at("flags");
-    if (flags.at(0) == "0") {
-        setFlag(flagZ, 0);
-    }
-    if (flags.at(0) == "1") {
-        setFlag(flagZ, 1);
-    }
-    if (flags.at(1) == "0") {
-        setFlag(flagN, 0);
-    }
-    if (flags.at(1) == "1") {
-        setFlag(flagN, 1);
-    }
-    if (flags.at(2) == "0") {
-        setFlag(flagH, 0);
-    }
-    if (flags.at(2) == "1") {
-        setFlag(flagH, 1);
-    }
-    if (flags.at(3) == "0") {
-        setFlag(flagC, 0);
-    }
-    if (flags.at(3) == "1") {
-        setFlag(flagC, 1);
-    }
+
+    auto setFlagFromJson = [this, &flags](uint8_t flag, int index) {
+        if (flags.at(index) == "0") {
+            setFlag(flag, 0);
+        }
+        if (flags.at(index) == "1") {
+            setFlag(flag, 1);
+        }
+    };
+    setFlagFromJson(flagZ, 0);
+    setFlagFromJson(flagN, 1);
+    setFlagFromJson(flagH, 2);
+    setFlagFromJson(flagC, 3);
 }
 
 void Cpu::rotateLeft(uint8_t& reg)
