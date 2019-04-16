@@ -137,6 +137,17 @@ Instruction disassemble(const std::vector<uint8_t>& memory, uint16_t pc)
     case 0xF0:
         instr.operand2 = fmt::format("($FF{:02x})", memory.at(pc + 1));
         break;
+
+    // Relative jumps - print absolute address instead of relative.
+    case 0x18:
+        instr.operand1 = fmt::format("${:04x}", pc + 1 + static_cast<int8_t>(memory.at(pc + 1)));
+        break;
+    case 0x20:
+    case 0x28:
+    case 0x30:
+    case 0x38:
+        instr.operand2 = fmt::format("${:04x}", pc + 2 + static_cast<int8_t>(memory.at(pc + 1)));
+        break;
     }
 
     return instr;
