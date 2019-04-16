@@ -59,6 +59,9 @@ bool isHalfCarryAddition16(uint16_t n, uint16_t m)
 
 bool isBitSet(uint8_t n, uint8_t byte)
 {
+    if (n > 7) {
+        throw std::invalid_argument("n must be between 0 and 7.");
+    }
     return (byte >> n) & 1;
 }
 
