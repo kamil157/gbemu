@@ -13,11 +13,11 @@
 
 #include <fmt/format.h>
 
-Debugger::Debugger(const Emulator& emulator, Cpu& cpu, QWidget* parent)
+Debugger::Debugger(const Emulator& emulator, QWidget* parent)
     : QMainWindow(parent)
     , ui(new Ui::Debugger)
     , emulator(emulator)
-    , cpu(cpu)
+    , cpu(emulator.getCpu())
 {
     ui->setupUi(this);
     QSettings settings("kamil157", "gbemu");
@@ -59,7 +59,7 @@ void Debugger::redraw()
     setRegisterLabel(ui->valueSP, cpu.getSP());
     setRegisterLabel(ui->valuePC, cpu.getPC());
 
-    Instruction instr = disassemble(emulator.getMmu()->getMemory(), cpu.getPC());
+    Instruction instr = disassemble(emulator.getMmu().getMemory(), cpu.getPC());
     auto nextInstructionStr = fmt::format("{} {}", instr.mnemonic, instr.operandsToString());
     ui->labelInstruction->setText(QString::fromStdString(nextInstructionStr));
 

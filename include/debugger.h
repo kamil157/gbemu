@@ -15,7 +15,7 @@ class Debugger : public QMainWindow {
     Q_OBJECT
 
 public:
-    explicit Debugger(const Emulator& emulator, Cpu& cpu, QWidget* parent = nullptr);
+    explicit Debugger(const Emulator &emulator, QWidget* parent = nullptr);
     virtual ~Debugger() override;
 
 public slots:
@@ -37,7 +37,7 @@ public slots:
 private:
     Ui::Debugger* ui;
     const Emulator& emulator;
-    Cpu& cpu;
+    const Cpu& cpu;
 
     // Is debugger paused.
     bool paused = true;

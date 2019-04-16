@@ -18,14 +18,14 @@
 #include <QSettings>
 #include <QTimer>
 
-Emulator::Emulator(const std::shared_ptr<Mmu>& mmu, Cpu& cpu, const std::string& romFilename)
-    : cpu(cpu)
-    , mmu(mmu)
+Emulator::Emulator(const std::string& romFilename)
+    : mmu()
+    , cpu(mmu)
 {
     auto bootstrapRom = readFile("../gbemu/res/bootstrap.bin");
-    mmu->loadBootstrap(bootstrapRom);
+    mmu.loadBootstrap(bootstrapRom);
     auto cartridgeRom = readFile(romFilename);
-    mmu->loadCartridge(cartridgeRom);
+    mmu.loadCartridge(cartridgeRom);
     timer = new QTimer(this);
 }
 
@@ -34,19 +34,9 @@ Emulator::~Emulator()
     delete timer;
 }
 
-std::vector<uint8_t> Emulator::getVram() const
-{
-    return mmu->getVram();
-}
-
-std::shared_ptr<Mmu> Emulator::getMmu() const
-{
-    return mmu;
-}
-
 void Emulator::executeInstruction()
 {
-    Instruction instr = disassemble(mmu->getMemory(), cpu.getPC());
+    Instruction instr = disassemble(mmu.getMemory(), cpu.getPC());
     if (cpu.execute()) {
         spdlog::trace("{:04x} {:<10} {:<6} {:<13} {}", instr.pc, instr.bytesToString(), instr.mnemonic, instr.operandsToString(), cpu.toString());
     } else {
@@ -101,11 +91,10 @@ int runGui(int argc, char** argv)
 {
     QApplication app(argc, argv);
     auto romFilename = argv[1];
-    auto mmu = std::make_shared<Mmu>();
-    Cpu cpu{ mmu };
-    Emulator emulator{ mmu, cpu, romFilename };
+
+    Emulator emulator{ romFilename };
     Gui gui{ emulator };
-    Debugger debugger{ emulator, cpu, &gui };
+    Debugger debugger{ emulator, &gui };
 
     QObject::connect(&debugger, &Debugger::pauseClicked, &emulator, &Emulator::pause);
     QObject::connect(&debugger, &Debugger::playClicked, &emulator, &Emulator::play);
@@ -122,7 +111,7 @@ int runGui(int argc, char** argv)
 int main(int argc, char** argv)
 {
     try {
-        spdlog::set_level(spdlog::level::trace);
+        spdlog::set_level(spdlog::level::debug);
         spdlog::set_pattern("[%H:%M:%S] %v");
         if (argc < 2) {
             throw std::runtime_error("Please provide rom name.");

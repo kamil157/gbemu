@@ -13,10 +13,14 @@ class Emulator : public QObject {
     Q_OBJECT
 
 public:
-    Emulator(const std::shared_ptr<Mmu>& mmu, Cpu& cpu, const std::string& romFilename);
+    Emulator(const std::string& romFilename);
     virtual ~Emulator();
-    std::vector<uint8_t> getVram() const;
-    std::shared_ptr<Mmu> getMmu() const;
+
+    const Mmu &getMmu() const { return mmu; }
+    Mmu& getMmu() { return mmu; }
+
+    const Cpu& getCpu() const { return cpu; }
+    Cpu& getCpu() { return cpu; }
 
     // Start execution.
     void startLoop();
@@ -41,8 +45,8 @@ signals:
     void executionPaused();
 
 private:
-    Cpu& cpu;
-    std::shared_ptr<Mmu> mmu;
+    Mmu mmu;
+    Cpu cpu;
     QTimer* timer;
     std::optional<uint16_t> breakpoint;
 

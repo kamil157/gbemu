@@ -24,7 +24,7 @@ void Gui::redraw()
     static const auto pixelsPerLine = 8;
     static const auto tilesPerRow = 16;
 
-    auto vram = emulator.getVram();
+    auto vram = emulator.getMmu().getVram();
     QImage image(128, 256, QImage::Format_RGB32);
     for (auto tileY = 0; tileY < 32; ++tileY) {
         for (auto tileX = 0; tileX < tilesPerRow; ++tileX) {

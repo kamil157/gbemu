@@ -7,13 +7,15 @@
 
 TEST_CASE("Cpu starts with pc 0", "[cpu]")
 {
-    Cpu cpu{ std::make_unique<Mmu>() };
+    Mmu mmu;
+    Cpu cpu{ mmu };
     REQUIRE(cpu.getPC() == 0);
 }
 
 TEST_CASE("AF register can be set and retrieved", "[cpu]")
 {
-    Cpu cpu{ std::make_unique<Mmu>() };
+    Mmu mmu;
+    Cpu cpu{ mmu };
 
     SECTION("AF is initially 0")
     {

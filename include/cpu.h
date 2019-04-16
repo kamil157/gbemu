@@ -13,7 +13,7 @@
 
 class Cpu {
 public:
-    Cpu(const std::shared_ptr<Mmu>& mmu);
+    Cpu(Mmu& mmu);
 
     // Execute next instruction.
     bool execute();
@@ -73,7 +73,7 @@ private:
     uint16_t pc = 0; // Program Counter
 
     int cycles = 0;
-    std::shared_ptr<Mmu> mmu;
+    Mmu& mmu;
 
     // Set flag in register f to b.
     void setFlag(uint8_t flag, bool b);
