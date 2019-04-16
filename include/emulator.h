@@ -16,7 +16,7 @@ public:
     Emulator(const std::string& romFilename);
     virtual ~Emulator();
 
-    const Mmu &getMmu() const { return mmu; }
+    const Mmu& getMmu() const { return mmu; }
     Mmu& getMmu() { return mmu; }
 
     const Cpu& getCpu() const { return cpu; }

@@ -15,7 +15,7 @@ class Debugger : public QMainWindow {
     Q_OBJECT
 
 public:
-    explicit Debugger(const Emulator &emulator, QWidget* parent = nullptr);
+    explicit Debugger(const Emulator& emulator, QWidget* parent = nullptr);
     virtual ~Debugger() override;
 
 public slots:
