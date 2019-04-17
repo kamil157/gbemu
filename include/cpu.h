@@ -2,6 +2,7 @@
 #define CPU_H
 
 #include "mmu.h"
+#include "timer.h"
 #include "utils.h"
 
 #include <cstdint>
@@ -13,7 +14,7 @@
 
 class Cpu {
 public:
-    Cpu(Mmu& mmu);
+    Cpu(Mmu& mmu, Timer& timer);
 
     // Execute next instruction.
     bool execute();
@@ -33,7 +34,7 @@ public:
     void setAF(uint16_t nn);
 
     // Get flag value from F register.
-    bool getFlag(uint8_t flag);
+    bool getFlag(uint8_t flag) const;
 
 private:
     union {
@@ -72,7 +73,7 @@ private:
     uint16_t sp = 0; // Stack Pointer
     uint16_t pc = 0; // Program Counter
 
-    int cycles = 0;
+    Timer& timer;
     Mmu& mmu;
 
     // Set flag in register f to b.

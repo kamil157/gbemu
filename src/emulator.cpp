@@ -1,6 +1,5 @@
 #include "emulator.h"
 
-#include "cpu.h"
 #include "debugger.h"
 #include "gui.h"
 #include "utils.h"
@@ -20,18 +19,20 @@
 
 Emulator::Emulator(const std::string& romFilename)
     : mmu()
-    , cpu(mmu)
+    , timer()
+    , cpu(mmu, timer)
+    , gpu(mmu, timer)
 {
     auto bootstrapRom = readFile("../gbemu/res/bootstrap.bin");
     mmu.loadBootstrap(bootstrapRom);
     auto cartridgeRom = readFile(romFilename);
     mmu.loadCartridge(cartridgeRom);
-    timer = new QTimer(this);
+    qtimer = new QTimer(this);
 }
 
 Emulator::~Emulator()
 {
-    delete timer;
+    delete qtimer;
 }
 
 void Emulator::executeInstruction()
@@ -42,6 +43,7 @@ void Emulator::executeInstruction()
     } else {
         spdlog::info("{:04x} {:<10} {:<6} {:<13}", instr.pc, instr.bytesToString(), instr.mnemonic, instr.operandsToString());
     }
+    gpu.step();
 }
 
 void Emulator::step()
@@ -64,15 +66,15 @@ void Emulator::play()
 
 void Emulator::startLoop()
 {
-    QObject::connect(timer, &QTimer::timeout, this, &Emulator::step);
-    timer->start(0);
+    QObject::connect(qtimer, &QTimer::timeout, this, &Emulator::step);
+    qtimer->start(0);
 }
 
 void Emulator::pause()
 {
     spdlog::info("Execution paused.");
-    QObject::disconnect(timer, &QTimer::timeout, this, &Emulator::step);
-    timer->stop();
+    QObject::disconnect(qtimer, &QTimer::timeout, this, &Emulator::step);
+    qtimer->stop();
 }
 
 void Emulator::breakpointSet(uint16_t pc)

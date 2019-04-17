@@ -2,7 +2,9 @@
 #define EMULATOR_H
 
 #include "cpu.h"
+#include "gpu.h"
 #include "mmu.h"
+#include "timer.h"
 
 #include <optional>
 
@@ -46,8 +48,11 @@ signals:
 
 private:
     Mmu mmu;
+    Timer timer;
     Cpu cpu;
-    QTimer* timer;
+    Gpu gpu;
+
+    QTimer* qtimer;
     std::optional<uint16_t> breakpoint;
 
     void step();

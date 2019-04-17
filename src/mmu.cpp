@@ -8,7 +8,7 @@
 Mmu::Mmu()
     : memory(0x10000, 0)
 {
-    memory[0xff44] = 0x90; // Don't wait for VBLANK as it's not implemented.
+    //    memory[0xff44] = 0x90; // Don't wait for VBLANK as it's not implemented.
 }
 
 void Mmu::set(uint16_t address, uint8_t value)
