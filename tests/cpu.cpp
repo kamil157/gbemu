@@ -8,14 +8,16 @@
 TEST_CASE("Cpu starts with pc 0", "[cpu]")
 {
     Mmu mmu;
-    Cpu cpu{ mmu };
+    Timer timer;
+    Cpu cpu{ mmu, timer };
     REQUIRE(cpu.getPC() == 0);
 }
 
 TEST_CASE("AF register can be set and retrieved", "[cpu]")
 {
     Mmu mmu;
-    Cpu cpu{ mmu };
+    Timer timer;
+    Cpu cpu{ mmu, timer };
 
     SECTION("AF is initially 0")
     {
