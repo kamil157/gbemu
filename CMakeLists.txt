@@ -19,6 +19,9 @@ add_subdirectory(lib/spdlog EXCLUDE_FROM_ALL)
 
 link_libraries(-lstdc++ -lm) # for Clang support
 
+add_library(gsl INTERFACE)
+target_include_directories(gsl INTERFACE lib/gsl/include)
+
 add_library(nlohmann_json INTERFACE)
 target_include_directories(nlohmann_json INTERFACE lib/nlohmann_json)
 
@@ -34,7 +37,7 @@ set(CORE_SOURCES src/cpu.cpp src/mmu.cpp src/gpu.cpp src/timer.cpp)
 set(CORE_HEADERS include/cpu.h include/mmu.h include/gpu.h include/timer.h)
 add_library(core ${CORE_SOURCES} ${CORE_HEADERS})
 target_include_directories(core PRIVATE include)
-target_link_libraries(core utils spdlog)
+target_link_libraries(core utils spdlog gsl)
 
 add_executable(emulator src/debugger.ui src/emulator.cpp src/debugger.cpp include/debugger.h include/emulator.h src/gui.cpp src/gui.ui include/gui.h)
 target_include_directories(emulator PRIVATE include)

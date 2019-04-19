@@ -37,11 +37,16 @@ Emulator::~Emulator()
 
 void Emulator::executeInstruction()
 {
-    Instruction instr = disassemble(mmu.getMemory(), cpu.getPC());
+    auto previousPC = cpu.getPC();
     if (cpu.execute()) {
-        spdlog::trace("{:04x} {:<10} {:<6} {:<13} {}", instr.pc, instr.bytesToString(), instr.mnemonic, instr.operandsToString(), cpu.toString());
+        if (spdlog::default_logger()->level() <= spdlog::level::trace) {
+            Instruction instr = disassemble(mmu.getMemory(), previousPC);
+            spdlog::trace("{:04x} {:<10} {:<6} {:<13} {}", instr.pc, instr.bytesToString(), instr.mnemonic, instr.operandsToString(), cpu.toString());
+        }
     } else {
+        Instruction instr = disassemble(mmu.getMemory(), previousPC);
         spdlog::info("{:04x} {:<10} {:<6} {:<13}", instr.pc, instr.bytesToString(), instr.mnemonic, instr.operandsToString());
+        pause();
     }
     gpu.step();
 }

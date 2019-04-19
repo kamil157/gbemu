@@ -60,7 +60,7 @@ void Gpu::step()
             mmu.set(lineAddress, mmu.get(lineAddress) + 1);
 
             if (mmu.get(lineAddress) > 153) {
-                spdlog::info("VBlank done.");
+                spdlog::trace("VBlank done.");
                 // Restart scanning modes
                 mode = Mode::OamAccess;
                 mmu.set(lineAddress, 0);
