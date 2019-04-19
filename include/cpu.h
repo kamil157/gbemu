@@ -106,9 +106,6 @@ private:
     // Push nn to stack.
     void push(uint16_t nn);
 
-    // Set flags based on json data.
-    void setFlagsFromJson(nlohmann::json opcode);
-
     // Rotate reg right, put old bit 0 in flag C, old flag C in msb.
     void rotateRight(uint8_t& reg);
 
@@ -141,6 +138,9 @@ private:
 
     // ADD HL,nn - add nn to hl
     void addHL(uint16_t nn);
+
+    // BIT n,r - test bit n in register r
+    void bit(uint8_t n, uint8_t byte);
 };
 
 #endif // CPU_H

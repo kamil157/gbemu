@@ -19,8 +19,8 @@ Cpu::Cpu(Mmu& mmu, Timer& timer)
     , bc(0)
     , de(0)
     , hl(0)
-    , mmu(mmu)
     , timer(timer)
+    , mmu(mmu)
 {
 }
 
@@ -55,24 +55,6 @@ bool Cpu::getFlag(uint8_t flag) const
     return f & flag;
 }
 
-void Cpu::setFlagsFromJson(json opcode)
-{
-    auto flags = opcode.at("flags");
-
-    auto setFlagFromJson = [this, &flags](uint8_t flag, int index) {
-        if (flags.at(index) == "0") {
-            setFlag(flag, 0);
-        }
-        if (flags.at(index) == "1") {
-            setFlag(flag, 1);
-        }
-    };
-    setFlagFromJson(flagZ, 0);
-    setFlagFromJson(flagN, 1);
-    setFlagFromJson(flagH, 2);
-    setFlagFromJson(flagC, 3);
-}
-
 void Cpu::rotateLeft(uint8_t& reg)
 {
     bool oldFlagC = getFlag(flagC);
@@ -80,6 +62,8 @@ void Cpu::rotateLeft(uint8_t& reg)
     reg <<= 1;
     reg += oldFlagC;
     setFlag(flagZ, reg == 0);
+    setFlag(flagN, 0);
+    setFlag(flagH, 0);
 }
 
 void Cpu::shiftRight(uint8_t& reg)
@@ -87,6 +71,8 @@ void Cpu::shiftRight(uint8_t& reg)
     setFlag(flagC, reg & 0x1);
     reg >>= 1;
     setFlag(flagZ, reg == 0);
+    setFlag(flagN, 0);
+    setFlag(flagH, 0);
 }
 
 void Cpu::rotateRight(uint8_t& reg)
@@ -96,6 +82,15 @@ void Cpu::rotateRight(uint8_t& reg)
     reg >>= 1;
     reg += oldFlagC << 7;
     setFlag(flagZ, reg == 0);
+    setFlag(flagN, 0);
+    setFlag(flagH, 0);
+}
+
+void Cpu::bit(uint8_t n, uint8_t byte)
+{
+    setFlag(flagZ, !isBitSet(n, byte));
+    setFlag(flagN, 0);
+    setFlag(flagH, 1);
 }
 
 bool Cpu::executeExtended()
@@ -108,7 +103,7 @@ bool Cpu::executeExtended()
     case 0x1A: rotateRight(d);                                                     break; // RR D
     case 0x3F: shiftRight(a);                                                      break; // SRL A
     case 0x38: shiftRight(b);                                                      break; // SRL B
-    case 0x7C: setFlag(flagZ, !isBitSet(7, h));                                    break; // BIT 7,H
+    case 0x7C: bit(7, h);                                                          break; // BIT 7,H
     // clang-format on
     default:
         spdlog::error("Unimplemented opcode: CB {:02X}", opcode);
@@ -175,6 +170,7 @@ void Cpu::dec(uint8_t& reg)
     setFlag(flagH, isHalfCarrySubtraction(static_cast<int8_t>(reg), 1));
     --reg;
     setFlag(flagZ, reg == 0);
+    setFlag(flagN, 1);
 }
 
 void Cpu::inc(uint8_t& reg)
@@ -182,18 +178,25 @@ void Cpu::inc(uint8_t& reg)
     setFlag(flagH, isHalfCarryAddition(reg, 1));
     ++reg;
     setFlag(flagZ, reg == 0);
+    setFlag(flagN, 0);
 }
 
 void Cpu::xorA(uint8_t n)
 {
     a ^= n;
     setFlag(flagZ, a == 0);
+    setFlag(flagN, 0);
+    setFlag(flagH, 0);
+    setFlag(flagC, 0);
 }
 
 void Cpu::orA(uint8_t n)
 {
     a |= n;
     setFlag(flagZ, a == 0);
+    setFlag(flagN, 0);
+    setFlag(flagH, 0);
+    setFlag(flagC, 0);
 }
 
 void Cpu::cp(uint8_t n)
@@ -201,6 +204,7 @@ void Cpu::cp(uint8_t n)
     setFlag(flagZ, a == n);
     setFlag(flagH, isHalfCarrySubtraction(static_cast<int8_t>(a), static_cast<int8_t>(n)));
     setFlag(flagC, a < n);
+    setFlag(flagN, 1);
 }
 
 void Cpu::sub(uint8_t n)
@@ -215,6 +219,7 @@ void Cpu::add(uint8_t n)
     setFlag(flagC, a + n > 0xff);
     a += n;
     setFlag(flagZ, a == 0);
+    setFlag(flagN, 0);
 }
 
 void Cpu::addHL(uint16_t nn)
@@ -222,6 +227,7 @@ void Cpu::addHL(uint16_t nn)
     setFlag(flagH, isHalfCarryAddition16(hl, nn));
     setFlag(flagC, hl + nn > 0xffff);
     hl += nn;
+    setFlag(flagN, 0);
 }
 
 void Cpu::adc(uint8_t n)
@@ -248,7 +254,6 @@ bool Cpu::execute()
     bool success = true;
 
     if (auto opcodeData = getOpcodeData(mmu.get(pc), mmu.get(pc + 1))) {
-        setFlagsFromJson(*opcodeData);
         auto jsonCycles = opcodeData->at("cycles");
         if (jsonCycles.size() == 1) {
             // There can be 2 values here, instructions need to implement that themselves.
