@@ -50,10 +50,10 @@ void Mmu::loadCartridge(const std::vector<uint8_t>& rom)
     memory.insert(memory.begin() + 0x100, rom.begin() + 0x100, rom.end());
 }
 
-std::vector<uint8_t> Mmu::getVram() const
+const gsl::span<const uint8_t> Mmu::getVram() const
 {
     // VRAM is between 0x8000 and 0xA000
-    return std::vector<uint8_t>{ memory.begin() + 0x8000, memory.begin() + 0xA000 };
+    return gsl::make_span(memory).subspan(0x8000, 0x2000);
 }
 
 std::vector<uint8_t> Mmu::getMemory() const

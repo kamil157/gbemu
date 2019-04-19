@@ -4,6 +4,7 @@
 #include "utils.h"
 
 #include <cstdint>
+#include <gsl/span>
 #include <vector>
 
 class Mmu {
@@ -22,8 +23,8 @@ public:
     // Load cartridge ROM into memory.
     void loadCartridge(const std::vector<uint8_t>& cartridgeStart);
 
-    // Return a copy of VRAM data.
-    std::vector<uint8_t> getVram() const;
+    // Return a view of VRAM data.
+    const gsl::span<const uint8_t> getVram() const;
 
     // Return contents of memory.
     std::vector<uint8_t> getMemory() const;

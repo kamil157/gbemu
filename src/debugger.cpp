@@ -37,7 +37,7 @@ Debugger::Debugger(const Emulator& emulator, QWidget* parent)
 
     QTimer* timer = new QTimer(this);
     QObject::connect(timer, &QTimer::timeout, this, &Debugger::redraw);
-    timer->start(1000 / 60);
+    timer->start(1000 / 30);
 
     onExecutionPaused();
 }

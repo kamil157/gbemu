@@ -15,7 +15,7 @@ Gui::Gui(const Emulator& emu, QWidget* parent)
 
     timer = new QTimer(this);
     QObject::connect(timer, &QTimer::timeout, this, &Gui::redraw);
-    timer->start(1000 / 60);
+    timer->start(1000 / 5);
 }
 
 void Gui::redraw()
