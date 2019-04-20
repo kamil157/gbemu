@@ -35,7 +35,15 @@ Emulator::~Emulator()
     delete qtimer;
 }
 
-void Emulator::executeInstruction()
+void Emulator::emulateFrame()
+{
+    bool frameFinished = false;
+    while (!frameFinished) {
+        frameFinished = executeInstruction();
+    }
+}
+
+bool Emulator::executeInstruction()
 {
     auto previousPC = cpu.getPC();
     if (cpu.execute()) {
@@ -47,39 +55,35 @@ void Emulator::executeInstruction()
         Instruction instr = disassemble(mmu.getMemory(), previousPC);
         spdlog::info("{:04x} {:<10} {:<6} {:<13}", instr.pc, instr.bytesToString(), instr.mnemonic, instr.operandsToString());
         pause();
+        return true;
     }
-    gpu.step();
+    return gpu.step();
 }
 
 void Emulator::step()
 {
     if (cpu.getPC() == breakpoint) {
         pause();
-        emit executionPaused();
         return;
     }
 
-    executeInstruction();
+    emulateFrame();
 }
 
 void Emulator::play()
 {
-    spdlog::info("Resuming execution.");
-    executeInstruction();
-    startLoop();
-}
-
-void Emulator::startLoop()
-{
+    spdlog::info("Starting emulation.");
     QObject::connect(qtimer, &QTimer::timeout, this, &Emulator::step);
     qtimer->start(0);
+    emit emulationResumed();
 }
 
 void Emulator::pause()
 {
-    spdlog::info("Execution paused.");
+    spdlog::info("Emulation paused.");
     QObject::disconnect(qtimer, &QTimer::timeout, this, &Emulator::step);
     qtimer->stop();
+    emit emulationPaused();
 }
 
 void Emulator::breakpointSet(uint16_t pc)
@@ -108,7 +112,9 @@ int runGui(int argc, char** argv)
     QObject::connect(&debugger, &Debugger::stepClicked, &emulator, &Emulator::executeInstruction);
     QObject::connect(&debugger, &Debugger::breakpointSet, &emulator, &Emulator::breakpointSet);
     QObject::connect(&debugger, &Debugger::breakpointUnset, &emulator, &Emulator::breakpointUnset);
-    QObject::connect(&emulator, &Emulator::executionPaused, &debugger, &Debugger::onExecutionPaused);
+
+    QObject::connect(&emulator, &Emulator::emulationPaused, &debugger, &Debugger::onEmulationPaused);
+    QObject::connect(&emulator, &Emulator::emulationResumed, &debugger, &Debugger::onEmulationResumed);
 
     debugger.show();
     gui.show();

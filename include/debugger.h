@@ -23,7 +23,10 @@ public slots:
     void redraw();
 
     // Execution was paused from an external source.
-    void onExecutionPaused();
+    void onEmulationPaused();
+
+    // Execution was resumed from an external source.
+    void onEmulationResumed();
 
     // Play or pause execution.
     void on_buttonPlayPause_clicked();

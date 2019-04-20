@@ -24,12 +24,12 @@ public:
     const Cpu& getCpu() const { return cpu; }
     Cpu& getCpu() { return cpu; }
 
-    // Start execution.
-    void startLoop();
-
 public slots:
-    // Execute a single CPU instruction.
-    void executeInstruction();
+    // Emulate a single frame.
+    void emulateFrame();
+
+    // Execute a single CPU instruction. Return true if frame finished.
+    bool executeInstruction();
 
     // Execute CPU instructions in a loop.
     void play();
@@ -44,7 +44,8 @@ public slots:
     void breakpointUnset();
 
 signals:
-    void executionPaused();
+    void emulationResumed();
+    void emulationPaused();
 
 private:
     Mmu mmu;
