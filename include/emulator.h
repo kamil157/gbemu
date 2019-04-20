@@ -55,8 +55,6 @@ private:
 
     QTimer* qtimer;
     std::optional<uint16_t> breakpoint;
-
-    void step();
 };
 
 #endif // EMULATOR_H
