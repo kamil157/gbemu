@@ -36,6 +36,11 @@ public:
     // Get flag value from F register.
     bool getFlag(uint8_t flag) const;
 
+    static const uint8_t flagZ = 1 << 7;
+    static const uint8_t flagN = 1 << 6;
+    static const uint8_t flagH = 1 << 5;
+    static const uint8_t flagC = 1 << 4;
+
 private:
     union {
         struct {
