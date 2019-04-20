@@ -8,7 +8,7 @@ Gpu::Gpu(Mmu& mmu, Timer& timer)
 {
 }
 
-void Gpu::step()
+bool Gpu::step()
 {
     static const int lineAddress = 0xff44;
     int clock = timer.getCycles();
@@ -64,8 +64,10 @@ void Gpu::step()
                 // Restart scanning modes
                 mode = Mode::OamAccess;
                 mmu.set(lineAddress, 0);
+                return true;
             }
         }
         break;
     }
+    return false;
 }

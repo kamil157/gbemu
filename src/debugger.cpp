@@ -39,7 +39,7 @@ Debugger::Debugger(const Emulator& emulator, QWidget* parent)
     QObject::connect(timer, &QTimer::timeout, this, &Debugger::redraw);
     timer->start(1000 / 30);
 
-    onExecutionPaused();
+    onEmulationPaused();
 }
 
 Debugger::~Debugger()
@@ -70,12 +70,9 @@ void Debugger::redraw()
 void Debugger::on_buttonPlayPause_clicked()
 {
     paused = !paused;
-    ui->buttonStep->setEnabled(paused);
     if (paused) {
-        ui->buttonPlayPause->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
         emit pauseClicked();
     } else {
-        ui->buttonPlayPause->setIcon(style()->standardIcon(QStyle::SP_MediaPause));
         emit playClicked();
     }
 }
@@ -98,11 +95,18 @@ void Debugger::on_buttonStep_clicked()
     emit stepClicked();
 }
 
-void Debugger::onExecutionPaused()
+void Debugger::onEmulationPaused()
 {
     paused = true;
     ui->buttonStep->setEnabled(paused);
     ui->buttonPlayPause->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
+}
+
+void Debugger::onEmulationResumed()
+{
+    paused = false;
+    ui->buttonStep->setEnabled(paused);
+    ui->buttonPlayPause->setIcon(style()->standardIcon(QStyle::SP_MediaPause));
 }
 
 void Debugger::closeEvent(QCloseEvent* event)

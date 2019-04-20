@@ -16,7 +16,9 @@ enum class Mode {
 class Gpu {
 public:
     Gpu(Mmu& mmu, Timer& timer);
-    void step();
+
+    // Execute GPU step, return true if frame can be drawn.
+    bool step();
 
 private:
     Mode mode = Mode::HBlank;
