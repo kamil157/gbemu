@@ -31,8 +31,11 @@ public slots:
     // Play or pause execution.
     void on_buttonPlayPause_clicked();
 
-    // Execute one instruction.
+    // Emulate one instruction.
     void on_buttonStep_clicked();
+
+    // Emulate one instruction.
+    void on_buttonStepFrame_clicked();
 
     // Set or unset breakpoint at PC.
     void on_textBreakpointPC_returnPressed();
@@ -51,6 +54,7 @@ signals:
     void pauseClicked();
     void playClicked();
     void stepClicked();
+    void stepFrameClicked();
     void breakpointSet(uint16_t pc);
     void breakpointUnset();
 };

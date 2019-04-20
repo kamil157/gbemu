@@ -31,6 +31,10 @@ Debugger::Debugger(const Emulator& emulator, QWidget* parent)
     QShortcut* shortcutStep = new QShortcut(Qt::Key_F10, this);
     QObject::connect(shortcutStep, &QShortcut::activated, this, &Debugger::on_buttonStep_clicked);
 
+    ui->buttonStepFrame->setIcon(style()->standardIcon(QStyle::SP_MediaSeekForward));
+    QShortcut* shortcutStepFrame = new QShortcut(Qt::Key_F9, this);
+    QObject::connect(shortcutStepFrame, &QShortcut::activated, this, &Debugger::on_buttonStepFrame_clicked);
+
     QRegExp regex("[0-9a-fA-F]{0,4}");
     QValidator* validator = new QRegExpValidator(regex, this);
     ui->textBreakpointPC->setValidator(validator);
@@ -93,6 +97,11 @@ void Debugger::on_textBreakpointPC_returnPressed()
 void Debugger::on_buttonStep_clicked()
 {
     emit stepClicked();
+}
+
+void Debugger::on_buttonStepFrame_clicked()
+{
+    emit stepFrameClicked();
 }
 
 void Debugger::onEmulationPaused()
