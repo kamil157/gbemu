@@ -39,6 +39,10 @@ void Emulator::emulateFrame()
 {
     bool frameFinished = false;
     while (!frameFinished) {
+        if (cpu.getPC() == breakpoint) {
+            pause();
+            return;
+        }
         frameFinished = executeInstruction();
     }
 }
@@ -60,20 +64,10 @@ bool Emulator::executeInstruction()
     return gpu.step();
 }
 
-void Emulator::step()
-{
-    if (cpu.getPC() == breakpoint) {
-        pause();
-        return;
-    }
-
-    emulateFrame();
-}
-
 void Emulator::play()
 {
     spdlog::info("Starting emulation.");
-    QObject::connect(qtimer, &QTimer::timeout, this, &Emulator::step);
+    QObject::connect(qtimer, &QTimer::timeout, this, &Emulator::emulateFrame);
     qtimer->start(0);
     emit emulationResumed();
 }
@@ -81,7 +75,7 @@ void Emulator::play()
 void Emulator::pause()
 {
     spdlog::info("Emulation paused.");
-    QObject::disconnect(qtimer, &QTimer::timeout, this, &Emulator::step);
+    QObject::disconnect(qtimer, &QTimer::timeout, this, &Emulator::emulateFrame);
     qtimer->stop();
     emit emulationPaused();
 }
