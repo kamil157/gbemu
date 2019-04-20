@@ -1,5 +1,6 @@
 #include "cpu.h"
 
+#include "cycles.h"
 #include "utils.h"
 
 #include <iostream>
@@ -8,11 +9,6 @@
 #include "spdlog/spdlog.h"
 
 using json = nlohmann::json;
-
-const uint8_t flagZ = 1 << 7;
-const uint8_t flagN = 1 << 6;
-const uint8_t flagH = 1 << 5;
-const uint8_t flagC = 1 << 4;
 
 Cpu::Cpu(Mmu& mmu, Timer& timer)
     : af(0)
@@ -36,7 +32,7 @@ std::ostream& operator<<(std::ostream& os, Cpu const& cpu)
 
 bool isFlag(uint8_t flag)
 {
-    return flag == flagZ || flag == flagN || flag == flagH || flag == flagC;
+    return flag == Cpu::flagZ || flag == Cpu::flagN || flag == Cpu::flagH || flag == Cpu::flagC;
 }
 
 void Cpu::setFlag(uint8_t flag, bool b)
@@ -143,7 +139,6 @@ void Cpu::relativeJump(bool condition)
     uint8_t offset = read();
     if (condition) {
         pc += static_cast<int8_t>(offset);
-        timer.increment(4);
     }
 }
 
@@ -153,7 +148,6 @@ void Cpu::call(bool condition)
     if (condition) {
         push(pc);
         pc = target;
-        timer.increment(12);
     }
 }
 
@@ -161,7 +155,6 @@ void Cpu::ret(bool condition)
 {
     if (condition) {
         pc = pop();
-        timer.increment(12);
     }
 }
 
@@ -253,13 +246,7 @@ bool Cpu::execute()
 {
     bool success = true;
 
-    if (auto opcodeData = getOpcodeData(mmu.get(pc), mmu.get(pc + 1))) {
-        auto jsonCycles = opcodeData->at("cycles");
-        if (jsonCycles.size() == 1) {
-            // There can be 2 values here, instructions need to implement that themselves.
-            timer.increment(int(jsonCycles.at(0)));
-        }
-    }
+    timer.increment(getCycles(mmu.get(pc), mmu.get(pc + 1), getFlag(flagZ), getFlag(flagC)));
 
     uint8_t opcode = read();
     switch (opcode) {
@@ -282,7 +269,7 @@ bool Cpu::execute()
     case 0x15: dec(d);                                                             break; // DEC D
     case 0x16: d = read();                                                         break; // LD D,n
     case 0x17: rotateLeft(a);                                                      break; // RLA
-    case 0x18: relativeJump(true);    timer.increment(-4);                                             break; // JR n
+    case 0x18: relativeJump(true);                                                 break; // JR n
     case 0x1A: a = mmu.get(de);                                                    break; // LD A,(DE)
     case 0x1C: inc(e);                                                             break; // INC E
     case 0x1D: dec(e);                                                             break; // DEC E
@@ -400,11 +387,11 @@ bool Cpu::execute()
     case 0xC4: call(getFlag(flagZ) == 0);                                          break; // CALL NZ,nn
     case 0xC6: add(read());                                                        break; // ADD A,n
     case 0xC8: ret(getFlag(flagZ) == 1);                                           break; // RET Z
-    case 0xC9: ret(true);                  timer.increment(-12);;                                        break; // RET
+    case 0xC9: ret(true);                                                          break; // RET
     case 0xC5: push(bc);                                                           break; // PUSH BC
     case 0xCB: success = executeExtended();                                        break;
     case 0xCC: call(getFlag(flagZ) == 1);                                          break; // CALL Z,nn
-    case 0xCD: call(true);    timer.increment(-12);                                                     break; // CALL nn
+    case 0xCD: call(true);                                                         break; // CALL nn
     case 0xCE: adc(read());                                                        break; // ADC A,n
     case 0xD0: ret(getFlag(flagC) == 0);                                           break; // RET NC
     case 0xD1: de = pop();                                                         break; // POP DE
