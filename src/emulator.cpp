@@ -110,6 +110,7 @@ int runGui(int argc, char** argv)
     QObject::connect(&debugger, &Debugger::pauseClicked, &emulator, &Emulator::pause);
     QObject::connect(&debugger, &Debugger::playClicked, &emulator, &Emulator::play);
     QObject::connect(&debugger, &Debugger::stepClicked, &emulator, &Emulator::executeInstruction);
+    QObject::connect(&debugger, &Debugger::stepFrameClicked, &emulator, &Emulator::emulateFrame);
     QObject::connect(&debugger, &Debugger::breakpointSet, &emulator, &Emulator::breakpointSet);
     QObject::connect(&debugger, &Debugger::breakpointUnset, &emulator, &Emulator::breakpointUnset);
 
