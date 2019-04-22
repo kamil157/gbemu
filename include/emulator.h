@@ -24,6 +24,9 @@ public:
     const Cpu& getCpu() const { return cpu; }
     Cpu& getCpu() { return cpu; }
 
+    const Gpu& getGpu() const { return gpu; }
+    Gpu& getGpu() { return gpu; }
+
 public slots:
     // Emulate a single frame.
     void emulateFrame();
@@ -46,6 +49,7 @@ public slots:
 signals:
     void emulationResumed();
     void emulationPaused();
+    void frameFinished();
 
 private:
     Mmu mmu;

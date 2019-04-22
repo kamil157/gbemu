@@ -1,8 +1,9 @@
 #include "emulator.h"
 
 #include "debugger.h"
-#include "gui.h"
+#include "screen.h"
 #include "utils.h"
+#include "vramview.h"
 
 #include <exception>
 #include <memory>
@@ -37,14 +38,15 @@ Emulator::~Emulator()
 
 void Emulator::emulateFrame()
 {
-    bool frameFinished = false;
-    while (!frameFinished) {
+    bool isFrameFinished = false;
+    while (!isFrameFinished) {
         if (cpu.getPC() == breakpoint) {
             pause();
             return;
         }
-        frameFinished = executeInstruction();
+        isFrameFinished = executeInstruction();
     }
+    emit frameFinished();
 }
 
 bool Emulator::executeInstruction()
@@ -63,12 +65,11 @@ bool Emulator::executeInstruction()
     }
     return gpu.step();
 }
-
 void Emulator::play()
 {
     spdlog::info("Starting emulation.");
     QObject::connect(qtimer, &QTimer::timeout, this, &Emulator::emulateFrame);
-    qtimer->start(0);
+    qtimer->start(1000 / 60);
     emit emulationResumed();
 }
 
@@ -98,8 +99,9 @@ int runGui(int argc, char** argv)
     auto romFilename = argv[1];
 
     Emulator emulator{ romFilename };
-    Gui gui{ emulator };
-    Debugger debugger{ emulator, &gui };
+    Screen screen{ emulator };
+    Debugger debugger{ emulator, &screen };
+    VramView vramView{ emulator, &screen };
 
     QObject::connect(&debugger, &Debugger::pauseClicked, &emulator, &Emulator::pause);
     QObject::connect(&debugger, &Debugger::playClicked, &emulator, &Emulator::play);
@@ -111,8 +113,12 @@ int runGui(int argc, char** argv)
     QObject::connect(&emulator, &Emulator::emulationPaused, &debugger, &Debugger::onEmulationPaused);
     QObject::connect(&emulator, &Emulator::emulationResumed, &debugger, &Debugger::onEmulationResumed);
 
+    QObject::connect(&emulator, &Emulator::frameFinished, &screen, &Screen::redraw);
+    screen.redraw();
+
     debugger.show();
-    gui.show();
+    screen.show();
+    vramView.show();
     return app.exec();
 }
 

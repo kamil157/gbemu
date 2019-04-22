@@ -1,5 +1,5 @@
-#ifndef GUI_H
-#define GUI_H
+#ifndef VRAMVIEW_H
+#define VRAMVIEW_H
 
 #include "emulator.h"
 
@@ -7,15 +7,15 @@
 #include <QMainWindow>
 
 namespace Ui {
-class Gui;
+class VramView;
 }
 
-class Gui : public QMainWindow {
+class VramView : public QMainWindow {
     Q_OBJECT
 
 public:
-    explicit Gui(const Emulator& emu, QWidget* parent = nullptr);
-    virtual ~Gui() override;
+    explicit VramView(const Emulator& emu, QWidget* parent = nullptr);
+    virtual ~VramView() override;
 
 public slots:
     // Draw contents of VRAM.
@@ -24,9 +24,9 @@ public slots:
 private:
     const Emulator& emulator;
     QTimer* timer;
-    Ui::Gui* ui;
+    Ui::VramView* ui;
 
     void closeEvent(QCloseEvent* event) override;
 };
 
-#endif // GUI_H
+#endif // VRAMVIEW_H
