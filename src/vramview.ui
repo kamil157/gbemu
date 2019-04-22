@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>Gui</class>
- <widget class="QMainWindow" name="Gui">
+ <class>VramView</class>
+ <widget class="QMainWindow" name="VramView">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -17,7 +17,7 @@
    </sizepolicy>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>VRAM</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <widget class="QLabel" name="labelVram">
