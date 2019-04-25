@@ -25,6 +25,7 @@ private:
     const Emulator& emulator;
     Ui::Screen* ui;
 
+    void resizeEvent(QResizeEvent* event) override;
     void closeEvent(QCloseEvent* event) override;
 };
 

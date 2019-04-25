@@ -9,22 +9,28 @@ Screen::Screen(const Emulator& emu, QWidget* parent)
     , ui(new Ui::Screen)
 {
     ui->setupUi(this);
-    setFixedSize(QSize(640, 576));
     QSettings settings("kamil157", "gbemu");
     restoreGeometry(settings.value("Screen/geometry").toByteArray());
+    redraw();
 }
 
 void Screen::redraw()
 {
     auto buffer = emulator.getGpu().getScreenBuffer();
     QImage image(buffer.data(), 160, 144, QImage::Format_RGB32);
-    QPixmap pixmap = QPixmap::fromImage(image.scaled(640, 576));
+    QPixmap pixmap = QPixmap::fromImage(image.scaled(size()));
     ui->labelVram->setPixmap(pixmap);
 }
 
 Screen::~Screen()
 {
     delete ui;
+}
+
+void Screen::resizeEvent(QResizeEvent* event)
+{
+    ui->labelVram->resize(size());
+    redraw();
 }
 
 void Screen::closeEvent(QCloseEvent* event)
