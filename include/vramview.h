@@ -23,10 +23,12 @@ public slots:
 
 private:
     const Emulator& emulator;
-    QTimer* timer;
     Ui::VramView* ui;
 
     void closeEvent(QCloseEvent* event) override;
+
+    void drawTileData();
+    void drawBgMap();
 };
 
 #endif // VRAMVIEW_H

@@ -114,7 +114,9 @@ int runGui(int argc, char** argv)
     QObject::connect(&emulator, &Emulator::emulationResumed, &debugger, &Debugger::onEmulationResumed);
 
     QObject::connect(&emulator, &Emulator::frameFinished, &screen, &Screen::redraw);
+    QObject::connect(&emulator, &Emulator::frameFinished, &vramView, &VramView::redraw);
     screen.redraw();
+    vramView.redraw();
 
     debugger.show();
     screen.show();

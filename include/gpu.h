@@ -17,8 +17,9 @@ class Gpu {
 public:
     Gpu(Mmu& mmu, Timer& timer);
 
-    std::vector<uint8_t> getScreenBuffer() const;
     std::vector<uint8_t> getTileData() const;
+    std::vector<uint8_t> getBgMap() const;
+    std::vector<uint8_t> getScreenBuffer() const;
 
     // Execute GPU step, return true if frame can be drawn.
     bool step();

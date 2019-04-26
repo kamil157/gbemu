@@ -9,16 +9,11 @@ VramView::VramView(const Emulator& emu, QWidget* parent)
     , ui(new Ui::VramView)
 {
     ui->setupUi(this);
-    setFixedSize(QSize(256, 512));
     QSettings settings("kamil157", "gbemu");
     restoreGeometry(settings.value("VramView/geometry").toByteArray());
-
-    timer = new QTimer(this);
-    QObject::connect(timer, &QTimer::timeout, this, &VramView::redraw);
-    timer->start(1000 / 5);
 }
 
-void VramView::redraw()
+void VramView::drawTileData()
 {
     auto buffer = emulator.getGpu().getTileData();
     QImage image(buffer.data(), 128, 256, QImage::Format_RGB32);
@@ -26,10 +21,23 @@ void VramView::redraw()
     ui->labelVram->setPixmap(pixmap);
 }
 
+void VramView::drawBgMap()
+{
+    auto buffer = emulator.getGpu().getBgMap();
+    QImage image(buffer.data(), 256, 256, QImage::Format_RGB32);
+    QPixmap pixmap = QPixmap::fromImage(image);
+    ui->labelBgMap->setPixmap(pixmap);
+}
+
+void VramView::redraw()
+{
+    drawTileData();
+    drawBgMap();
+}
+
 VramView::~VramView()
 {
     delete ui;
-    delete timer;
 }
 
 void VramView::closeEvent(QCloseEvent* event)
