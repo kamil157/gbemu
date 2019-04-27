@@ -17,7 +17,7 @@ Screen::Screen(const Emulator& emu, QWidget* parent)
 void Screen::redraw()
 {
     auto buffer = emulator.getGpu().getScreenBuffer();
-    QImage image(buffer.data(), 160, 144, QImage::Format_RGB32);
+    QImage image(buffer.getData(), 160, 144, QImage::Format_RGB32);
     QPixmap pixmap = QPixmap::fromImage(image.scaled(size()));
     ui->labelVram->setPixmap(pixmap);
 }

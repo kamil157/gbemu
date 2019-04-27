@@ -16,7 +16,7 @@ VramView::VramView(const Emulator& emu, QWidget* parent)
 void VramView::drawTileData()
 {
     auto buffer = emulator.getGpu().getTileData();
-    QImage image(buffer.data(), 128, 256, QImage::Format_RGB32);
+    QImage image(buffer.getData(), 128, 256, QImage::Format_RGB32);
     QPixmap pixmap = QPixmap::fromImage(image.scaled(256, 512));
     ui->labelVram->setPixmap(pixmap);
 }
@@ -24,7 +24,7 @@ void VramView::drawTileData()
 void VramView::drawBgMap()
 {
     auto buffer = emulator.getGpu().getBgMap();
-    QImage image(buffer.data(), 256, 256, QImage::Format_RGB32);
+    QImage image(buffer.getData(), 256, 256, QImage::Format_RGB32);
     QPixmap pixmap = QPixmap::fromImage(image);
     ui->labelBgMap->setPixmap(pixmap);
 }
