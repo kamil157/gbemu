@@ -89,6 +89,17 @@ void Cpu::bit(uint8_t n, uint8_t byte)
     setFlag(flagH, 1);
 }
 
+void Cpu::swap(uint8_t& reg)
+{
+    uint8_t lower = reg & 0x0f;
+    uint8_t upper = reg & 0xf0;
+    reg = lower | upper;
+    setFlag(flagZ, reg == 0);
+    setFlag(flagN, 0);
+    setFlag(flagH, 0);
+    setFlag(flagC, 0);
+}
+
 bool Cpu::executeExtended()
 {
     uint8_t opcode = read();
@@ -98,6 +109,7 @@ bool Cpu::executeExtended()
     case 0x19: rotateRight(c);                                                     break; // RR C
     case 0x1A: rotateRight(d);                                                     break; // RR D
     case 0x3F: shiftRight(a);                                                      break; // SRL A
+    case 0x37: swap(a);                                                            break; // SWAP A
     case 0x38: shiftRight(b);                                                      break; // SRL B
     case 0x7C: bit(7, h);                                                          break; // BIT 7,H
     // clang-format on
@@ -192,6 +204,15 @@ void Cpu::orA(uint8_t n)
     setFlag(flagC, 0);
 }
 
+void Cpu::andA(uint8_t n)
+{
+    a &= n;
+    setFlag(flagZ, a == 0);
+    setFlag(flagN, 0);
+    setFlag(flagH, 1);
+    setFlag(flagC, 0);
+}
+
 void Cpu::cp(uint8_t n)
 {
     setFlag(flagZ, a == n);
@@ -228,9 +249,17 @@ void Cpu::adc(uint8_t n)
     add(n + getFlag(flagC));
 }
 
-void disableInterrupts()
+void Cpu::cpl()
 {
-    spdlog::warn("DI is unimplemented.");
+    a = ~a;
+    setFlag(flagN, 1);
+    setFlag(flagH, 1);
+}
+
+void Cpu::rst(uint16_t target)
+{
+    push(pc);
+    pc = target;
 }
 
 uint16_t Cpu::getAF() const { return af; }
@@ -259,6 +288,7 @@ bool Cpu::execute()
     case 0x05: dec(b);                                                             break; // DEC B
     case 0x06: b = read();                                                         break; // LD B,n
     case 0x0A: a = mmu.get(bc);                                                    break; // LD A,(BC)
+    case 0x0B: --bc;                                                               break; // DEC BC
     case 0x0C: inc(c);                                                             break; // INC C
     case 0x0D: dec(c);                                                             break; // DEC C
     case 0x0E: c = read();                                                         break; // LD C,n
@@ -270,6 +300,7 @@ bool Cpu::execute()
     case 0x16: d = read();                                                         break; // LD D,n
     case 0x17: rotateLeft(a);                                                      break; // RLA
     case 0x18: relativeJump(true);                                                 break; // JR n
+    case 0x19: addHL(de);                                                          break; // ADD HL,DE
     case 0x1A: a = mmu.get(de);                                                    break; // LD A,(DE)
     case 0x1C: inc(e);                                                             break; // INC E
     case 0x1D: dec(e);                                                             break; // DEC E
@@ -283,18 +314,21 @@ bool Cpu::execute()
     case 0x25: dec(h);                                                             break; // DEC H
     case 0x26: h = read();                                                         break; // LD H,n
     case 0x28: relativeJump(getFlag(flagZ) == 1);                                  break; // JR Z,n
+    case 0x29: addHL(hl);                                                          break; // ADD HL,HL
     case 0x2A: a = mmu.get(hl++);                                                  break; // LD A,(HL+)
     case 0x2C: inc(l);                                                             break; // INC L
     case 0x2D: dec(l);                                                             break; // DEC L
     case 0x2E: l = read();                                                         break; // LD L,n
-    case 0x29: addHL(hl);                                                          break; // ADD HL,HL
+    case 0x2F: cpl();                                                              break; // CPL
     case 0x30: relativeJump(getFlag(flagC) == 0);                                  break; // JR NC,n
     case 0x31: sp = read16();                                                      break; // LD SP,nn
     case 0x32: mmu.set(hl--, a);                                                   break; // LDD (HL),A
     case 0x33: ++sp;                                                               break; // INC SP
     case 0x35: { auto n = mmu.get(hl); dec(n); mmu.set(hl, n); }                   break; // DEC (HL)
     case 0x36: mmu.set(hl, read());                                                break; // LD (HL),n
+    case 0x37: setFlag(flagN, 0); setFlag(flagH, 0); setFlag(flagC, 1);            break; // SCF
     case 0x38: relativeJump(getFlag(flagC) == 1);                                  break; // JR C,n
+    case 0x39: addHL(sp);                                                          break; // ADD HL,SP
     case 0x3A: a = mmu.get(hl--);                                                  break; // LD A,(HL-)
     case 0x3C: inc(a);                                                             break; // INC A
     case 0x3D: dec(a);                                                             break; // DEC A
@@ -363,7 +397,10 @@ bool Cpu::execute()
     case 0x7E: a = mmu.get(hl);                                                    break; // LD A,(HL)
     case 0x7F: a = a;                                                              break; // LD A,A
     case 0x86: add(mmu.get(hl));                                                   break; // ADD A,(HL)
+    case 0x87: add(a);                                                             break; // ADD A,A
     case 0x90: sub(b);                                                             break; // SUB B
+    case 0xA1: andA(c);                                                            break; // AND C
+    case 0xA7: andA(a);                                                            break; // AND A
     case 0xA8: xorA(b);                                                            break; // XOR B
     case 0xA9: xorA(c);                                                            break; // XOR C
     case 0xAA: xorA(d);                                                            break; // XOR D
@@ -404,16 +441,20 @@ bool Cpu::execute()
     case 0xE1: hl = pop();                                                         break; // POP HL
     case 0xE2: mmu.set(0xFF00 + c, a);                                             break; // LD ($FF00+C),A
     case 0xE5: push(hl);                                                           break; // PUSH HL
+    case 0xE6: andA(read());                                                       break; // AND n
     case 0xE9: sp = mmu.get(hl);                                                   break; // JP (HL)
     case 0xEA: mmu.set(read16(), a);                                               break; // LD ($nn),A
     case 0xEE: xorA(read());                                                       break; // XOR n
+    case 0xEF: rst(0x0028);                                                        break; // RST 28H
     case 0xF0: a = mmu.get(0xFF00 + read());                                       break; // LDH A,(n)
     case 0xF1: setAF(pop());                                                       break; // POP AF
-    case 0xF3: disableInterrupts();                                                break; // DI
+    case 0xF3: spdlog::warn("DI is unimplemented.");                               break; // DI
     case 0xF5: push(getAF());                                                      break; // PUSH AF
     case 0xF6: orA(read());                                                        break; // OR n
     case 0xFA: a = mmu.get(read());                                                break; // LD A,(nn)
+    case 0xFB: spdlog::warn("EI is unimplemented.");                               break; // EI
     case 0xFE: cp(read());                                                         break; // CP n
+    case 0xFF: rst(0x0038);                                                        break; // RST 38H
     // clang-format on
     default:
         spdlog::error("Unimplemented opcode: {:02X}", opcode);

@@ -105,6 +105,9 @@ private:
     // or a with n, store result in a.
     void orA(uint8_t reg);
 
+    // and a with n, store result in a.
+    void andA(uint8_t reg);
+
     // Pop nn from stack.
     uint16_t pop();
 
@@ -120,6 +123,9 @@ private:
     // Shift reg right, put old bit 0 in flag C, 0 in msb.
     void shiftRight(uint8_t& reg);
 
+    // SWAP - Swap upper and lower nibbles of reg.
+    void swap(uint8_t& reg);
+
     // JR n, JR cc,n - add n to current address and jump to it, if condition is met.
     void relativeJump(bool condition);
 
@@ -128,6 +134,9 @@ private:
 
     // RET, RET cc - pop two bytes from the stack and jump to that address, if condition is met.
     void ret(bool condition);
+
+    // RST n - push pc to stack and jump to target.
+    void rst(uint16_t target);
 
     // CP n - compare a with n.
     void cp(uint8_t n);
@@ -140,6 +149,9 @@ private:
 
     // ADC A,n - add n + flag C to a.
     void adc(uint8_t n);
+
+    // CPL - flip all bits in a.
+    void cpl();
 
     // ADD HL,nn - add nn to hl
     void addHL(uint16_t nn);
