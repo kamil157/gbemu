@@ -122,6 +122,7 @@ bool Gpu::step()
             if (mmu.get(lineAddress) == 143) {
                 // Enter vblank
                 mode = Mode::VBlank;
+                mmu.set(0xFF0F, 1); // VBlank interrupt
                 //                GPU._canvas.putImageData(GPU._scrn, 0, 0);
             } else {
                 mode = Mode::OamAccess;

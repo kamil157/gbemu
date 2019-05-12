@@ -154,6 +154,14 @@ void Cpu::relativeJump(bool condition)
     }
 }
 
+void Cpu::jump(bool condition)
+{
+    uint16_t target = read16();
+    if (condition) {
+        pc = target;
+    }
+}
+
 void Cpu::call(bool condition)
 {
     uint16_t target = read16();
@@ -271,9 +279,32 @@ uint16_t Cpu::getPC() const { return pc; }
 
 void Cpu::setAF(uint16_t nn) { af = nn; }
 
+void Cpu::handleInterrupts()
+{
+    auto interruptEnable = mmu.get(0xFFFF);
+    auto interruptFlag = mmu.get(0xFF0F);
+    for (uint8_t i = 0; i < 5; ++i) {
+        if (isBitSet(i, interruptFlag) && ime == 1 && isBitSet(i, interruptEnable)) {
+            ime = 0;
+            push(pc);
+            pc = 0x40 + i * 0x8; // Jump to interrupt handler
+            mmu.set(0xFF0F, interruptFlag & ~(1 << i)); // Reset interrupt flag
+            timer.increment(20);
+            spdlog::debug("Interrupt triggered. Jumping to ${:02x}", pc);
+            return;
+        }
+    }
+}
+
 bool Cpu::execute()
 {
     bool success = true;
+
+    handleInterrupts();
+    if (imeDelayed.has_value()) {
+        ime = imeDelayed.value();
+        imeDelayed = {};
+    }
 
     timer.increment(getCycles(mmu.get(pc), mmu.get(pc + 1), getFlag(flagZ), getFlag(flagC)));
 
@@ -324,6 +355,7 @@ bool Cpu::execute()
     case 0x31: sp = read16();                                                      break; // LD SP,nn
     case 0x32: mmu.set(hl--, a);                                                   break; // LDD (HL),A
     case 0x33: ++sp;                                                               break; // INC SP
+    case 0x34: ++hl;                                                               break; // INC HL
     case 0x35: { auto n = mmu.get(hl); dec(n); mmu.set(hl, n); }                   break; // DEC (HL)
     case 0x36: mmu.set(hl, read());                                                break; // LD (HL),n
     case 0x37: setFlag(flagN, 0); setFlag(flagH, 0); setFlag(flagC, 1);            break; // SCF
@@ -420,12 +452,13 @@ bool Cpu::execute()
     case 0xBE: cp(mmu.get(hl));                                                    break; // CP (HL)
     case 0xC0: ret(getFlag(flagZ) == 0);                                           break; // RET NZ
     case 0xC1: bc = pop();                                                         break; // POP BC
-    case 0xC3: pc = read16();                                                      break; // JP nn
+    case 0xC3: jump(true);                                                         break; // JP nn
     case 0xC4: call(getFlag(flagZ) == 0);                                          break; // CALL NZ,nn
     case 0xC6: add(read());                                                        break; // ADD A,n
     case 0xC8: ret(getFlag(flagZ) == 1);                                           break; // RET Z
     case 0xC9: ret(true);                                                          break; // RET
     case 0xC5: push(bc);                                                           break; // PUSH BC
+    case 0xCA: jump(getFlag(flagZ) == 1);                                          break; // JP Z
     case 0xCB: success = executeExtended();                                        break;
     case 0xCC: call(getFlag(flagZ) == 1);                                          break; // CALL Z,nn
     case 0xCD: call(true);                                                         break; // CALL nn
@@ -436,23 +469,24 @@ bool Cpu::execute()
     case 0xD5: push(de);                                                           break; // PUSH DE
     case 0xD6: sub(read());                                                        break; // SUB N
     case 0xD8: ret(getFlag(flagC) == 1);                                           break; // RET C
+    case 0xD9: imeDelayed = 1; ret(true);                                          break; // RETI
     case 0xDC: call(getFlag(flagC) == 1);                                          break; // CALL C,nn
     case 0xE0: mmu.set(0xFF00 + read(), a);                                        break; // LDH ($FF00+n),A
     case 0xE1: hl = pop();                                                         break; // POP HL
     case 0xE2: mmu.set(0xFF00 + c, a);                                             break; // LD ($FF00+C),A
     case 0xE5: push(hl);                                                           break; // PUSH HL
     case 0xE6: andA(read());                                                       break; // AND n
-    case 0xE9: sp = mmu.get(hl);                                                   break; // JP (HL)
+    case 0xE9: pc = mmu.get(hl);                                                   break; // JP (HL)
     case 0xEA: mmu.set(read16(), a);                                               break; // LD ($nn),A
     case 0xEE: xorA(read());                                                       break; // XOR n
     case 0xEF: rst(0x0028);                                                        break; // RST 28H
     case 0xF0: a = mmu.get(0xFF00 + read());                                       break; // LDH A,(n)
     case 0xF1: setAF(pop());                                                       break; // POP AF
-    case 0xF3: spdlog::warn("DI is unimplemented.");                               break; // DI
+    case 0xF3: imeDelayed = 0;                                                     break; // DI
     case 0xF5: push(getAF());                                                      break; // PUSH AF
     case 0xF6: orA(read());                                                        break; // OR n
-    case 0xFA: a = mmu.get(read());                                                break; // LD A,(nn)
-    case 0xFB: spdlog::warn("EI is unimplemented.");                               break; // EI
+    case 0xFA: a = mmu.get(read16());                                              break; // LD A,(nn)
+    case 0xFB: imeDelayed = 1;                                                     break; // EI
     case 0xFE: cp(read());                                                         break; // CP n
     case 0xFF: rst(0x0038);                                                        break; // RST 38H
     // clang-format on

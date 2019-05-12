@@ -78,11 +78,17 @@ private:
     uint16_t sp = 0; // Stack Pointer
     uint16_t pc = 0; // Program Counter
 
+    bool ime = 0; // Interrupt Master Enable Flag
+    std::optional<bool> imeDelayed = 0; // Interrupt Master Enable Flag - if set, sets ime after 1 instruction
+
     Timer& timer;
     Mmu& mmu;
 
     // Set flag in register f to b.
     void setFlag(uint8_t flag, bool b);
+
+    // Run Interrupt Service Routine if requested by interrupt flag.
+    void handleInterrupts();
 
     // Run CB prefixed instruction.
     bool executeExtended();
@@ -128,6 +134,9 @@ private:
 
     // JR n, JR cc,n - add n to current address and jump to it, if condition is met.
     void relativeJump(bool condition);
+
+    // JP nn, JP cc,nn - jump to nn, if condition is met.
+    void jump(bool condition);
 
     // CALL nn, CALL cc, nn - push address of next instruction onto stack and then jump to address nn, if condition is met.
     void call(bool condition);
