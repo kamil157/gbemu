@@ -3,6 +3,9 @@ Game Boy emulator
 
 [![Build Status](https://travis-ci.com/kamil157/gbemu.svg?branch=master)](https://travis-ci.com/kamil157/gbemu)
 
+# Current progress
+![Progress](progress.gif)
+
 # Requirements
 * CMake
 * C++17 compiler
